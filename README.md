@@ -2,7 +2,7 @@
 
 A browser pen fight game set on the teacher's table in a 90s Bangladeshi classroom. It's tiffin period, Sir is in the teachers' room, and you have one job: flick your pen and knock your friend's pen off the table.
 
-Play in a full **3D classroom** (blackboard, benches, ceiling fans, the cane on Sir's chair) or a clean **2D top-down table** that runs on older phones too.
+Play in a full **3D classroom** modelled on a traditional Bangladeshi government school (blackboard, rows of wooden desks and benches, a village mural, tall grilled windows with wall charts, ceiling fans, the cane on Sir's chair, and an open door onto the school field with the national flag in front of the next building) or a clean **2D top-down table** that runs on older phones too.
 
 ## Features
 
@@ -101,7 +101,7 @@ The scripts are classic `<script>` files that share globals, so the game still r
 - Web Audio for the flick, hit and fall sounds, generated in code with no audio files
 - Google Fonts: Anek Bangla (interface), Atma (chalk and handwriting) and Kalam (English handwriting)
 
-All textures (the blackboard, wood, red-oxide floor and notice board) are drawn in code at runtime. The only image files are the icons and the link preview in `assets/`, which the game itself never loads.
+All textures (the blackboard, wood, cement floor, village mural, wall charts and notice board) are drawn in code at runtime. The only image files are the icons and the link preview in `assets/`, which the game itself never loads.
 
 ## Credits and note
 

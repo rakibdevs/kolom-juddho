@@ -4,7 +4,7 @@
 /* ================= loop ================= */
 let acc=0,last=performance.now();
 function sync3D(now){
-  fans.forEach(f=>f.rotation.y+=.15);
+  fans.forEach(f=>f.rotation.y+=.15);waveFlag(now);
   pens.forEach((p,i)=>{
     const m=meshes[i];if(!m)return;
     m.outer.position.set(p.x,p.falling?p.falling.y:TOP+p.r,p.z);m.outer.rotation.y=-p.a;
@@ -18,8 +18,7 @@ function sync3D(now){
     arrow.userData.mat.color.setHSL((1-a.power)*.33,.9,.52);
     if(a.px!=null){const pos=pullLine.geometry.attributes.position;pos.setXYZ(0,a.cx,TOP+.15,a.cz);pos.setXYZ(1,a.px,TOP+.15,a.pz);pos.needsUpdate=true;pullLine.visible=true;}else pullLine.visible=false;
   } else {arrow.visible=false;pullLine.visible=false;}
-  const cp=Math.cos(cam.pitch);
-  camera.position.set(cam.tx+Math.sin(cam.yaw)*cp*cam.dist,cam.ty+Math.sin(cam.pitch)*cam.dist,cam.tz+Math.cos(cam.yaw)*cp*cam.dist);
+  camPos(cam.yaw,cam.pitch,cam.dist,camera.position);
   camera.lookAt(cam.tx,cam.ty,cam.tz);
   renderer.render(scene,camera);
 }
@@ -46,7 +45,7 @@ function frame(now){
     if(f.y<=fl){f.y=fl;f.done=true;if(meshes[i])meshes[i].inner.rotation.z=0;snap(.7,1300,.12,900);setTimeout(()=>snap(.35,1800,.08),110);}
   });
   if(!$('#menu').hidden||!$('#endScreen').hidden)return;
-  if(G.view==='3d'&&has3D)sync3D(now);else draw2D(now);
+  if(G.view==='3d'&&has3D&&!G.glLost)sync3D(now);else draw2D(now);
 }
 
 /* ================= boot ================= */
@@ -62,8 +61,13 @@ async function init(){
     cv.addEventListener('pointerup',onUp);cv.addEventListener('pointercancel',onUp);
     cv.addEventListener('contextmenu',e=>e.preventDefault());
   });
-  if(has3D)renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();cam.dist=clamp(cam.dist*(1+e.deltaY*.001),6,45);},{passive:false});
-  addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}});
+  if(has3D)renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();cam.dist=clamp(cam.dist*(1+e.deltaY*.001),6,45);cam.user=true;},{passive:false});
+  // Phones can drop the WebGL context under memory pressure. Fall back to 2D so the game keeps going.
+  if(has3D){
+    renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();G.glLost=true;if(G.view==='3d'){setView('2d');if(G.matchLive)toast('3D থেমে গেছে','2D-তে খেলা চলছে');}});
+    renderer.domElement.addEventListener('webglcontextrestored',()=>{G.glLost=false;});
+  }
+  addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(!cam.user)resetCam();}});
   $('#loading').remove();$('#menu').hidden=false;refreshMenu();drawTableBg();
   requestAnimationFrame(t=>{last=t;frame(t);});
 }

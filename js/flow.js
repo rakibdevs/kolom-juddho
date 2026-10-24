@@ -5,7 +5,7 @@
 const isCPU=i=>G.mode==='cpu'&&i===1;
 function who(i){return G.mode==='cpu'?(i===0?'তুমি':`${CPU} (CPU)`):(i===0?'প্লেয়ার ১':'প্লেয়ার ২');}
 function setView(v){
-  if(v==='3d'&&!has3D)v='2d';
+  if(v==='3d'&&(!has3D||G.glLost))v='2d';
   G.view=v;$('#c').style.display=v==='3d'?'block':'none';c2.style.display=v==='2d'?'block':'none';
   $('#bView').textContent=v==='3d'?'2D':'3D';$('#bCam').hidden=v!=='3d';
   if(arrow){arrow.visible=false;pullLine.visible=false;}
@@ -16,7 +16,7 @@ function setupMatch(){
   if(has3D){meshes=pens.map(p=>makePenMesh(p.def));rings=[makeRing(0x3f6bff),makeRing(0xff4d43)];rings.forEach((r,i)=>r.scale.setScalar(pens[i].L*.62));}
   G.score=[0,0];G.starter=0;G.matchLive=true;
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
-  setView(G.view);newRound();
+  resetCam();setView(G.view);newRound();
 }
 function newRound(){
   const z0=(Math.random()-.5)*1.6;
@@ -65,7 +65,7 @@ function matchOver(w){
   $('#endTitle').textContent=cpuWon?`${CPU} জিতে গেল!`:(G.mode==='cpu'?'তুমি চ্যাম্পিয়ন!':`${who(w)} চ্যাম্পিয়ন!`);
   $('#endScore').textContent=`স্কোর ${toBn(G.score[0])} – ${toBn(G.score[1])}`;
   $('#endText').textContent=cpuWon?`${CPU} হাসছে। আবার চেষ্টা করো — কলমের মাথার দিকে মারলে ঘুরে গিয়ে বেশি জোরে লাগে।`:'এই যে, স্যার আসছেন! কলম পকেটে ঢোকাও।';
-  prepareShare($('#endTitle').textContent,$('#endScore').textContent);
+  prepareShare(w);
   $('#endScreen').hidden=false;
 }
 

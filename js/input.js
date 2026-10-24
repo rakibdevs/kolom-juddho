@@ -16,14 +16,14 @@ function onDown(e){
   if(ptrs.size===2){aim=null;orbit=null;G.aimVis=null;const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);return;}
   if(G.state==='aim'&&!isCPU(G.turn)){
     const pt=tablePoint(e),p=pens[G.turn];
-    const tol=G.view==='2d'?Math.max(.6,26/T2.s):.6;
+    const touch=e.pointerType==='touch',tol=G.view==='2d'?Math.max(.6,(touch?34:26)/T2.s):touch?.85:.6;
     if(pt){const ap=axisPoint(p,pt.x,pt.z);if(ap.d<tol){aim={s:ap.s,cx:ap.px,cz:ap.pz,power:0,dx:0,dz:0};return;}}
   }
   if(G.view==='3d')orbit={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch};
 }
 function onMove(e){
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){if(G.view!=='3d')return;const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)cam.dist=clamp(cam.dist*pinch0/d,6,45);pinch0=d;return;}
+  if(ptrs.size===2){if(G.view!=='3d')return;const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0){cam.dist=clamp(cam.dist*pinch0/d,6,45);cam.user=true;}pinch0=d;return;}
   if(aim){
     const pt=tablePoint(e);if(!pt)return;
     const px=aim.cx-pt.x,pz=aim.cz-pt.z,l=Math.hypot(px,pz);
@@ -31,7 +31,7 @@ function onMove(e){
     if(aim.power>.04){G.aimVis={cx:aim.cx,cz:aim.cz,ang:Math.atan2(aim.dz,aim.dx),power:aim.power,px:pt.x,pz:pt.z};setHint(`শক্তি ${toBn(Math.round(aim.power*100))}% — ছেড়ে দিলেই টোকা`);}
     else G.aimVis=null;
   } else if(orbit){
-    cam.yaw=orbit.yaw-(e.clientX-orbit.x)*.006;
+    cam.yaw=orbit.yaw-(e.clientX-orbit.x)*.006;cam.user=true;
     cam.pitch=clamp(orbit.pitch+(e.clientY-orbit.y)*.005,.18,1.45);
   }
 }

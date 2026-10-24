@@ -66,6 +66,6 @@ function wireMenu(){
   $('#bChange').onclick=()=>{$('#endScreen').hidden=true;openMenu();};
   $('#bMenu').onclick=openMenu;
   $('#bView').onclick=()=>setView(G.view==='3d'?'2d':'3d');
-  $('#bCam').onclick=()=>Object.assign(cam,CAM0);
+  $('#bCam').onclick=resetCam;
   $('#bMute').onclick=()=>{muted=!muted;$('#bMute').textContent=muted?'🔇':'🔊';};
 }

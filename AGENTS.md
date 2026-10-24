@@ -30,11 +30,11 @@ Scripts load in this order, and each one only uses names from earlier files at l
 | `js/cpu.js` | Rashed: `simulate` and `planShot`. They clone the pen state, try candidate shots and score the results. |
 | `js/sound.js` | Web Audio noise bursts (`snap`, `hitSound`) |
 | `js/art.js` | Canvas textures for both views, and `drawTableTop` (Sir's table seen from above, used by the home screen and the share card) |
-| `js/scene3d.js` | `buildScene` (classroom), `makePenMesh`, `makeRing`, using three.js |
+| `js/scene3d.js` | `buildScene` (classroom), `makePenMesh`, `makeRing`, using three.js. `sideWall` builds the walls with real openings for the door and windows, and `buildOutside` adds the sky, field, flag (waved by `waveFlag`), school building and trees seen through them. Camera helpers: `camPos` keeps the orbit camera inside `ROOM`, `fitDist` and `camHome` fit the table to the screen (side view on portrait phones). |
 | `js/render2d.js` | `layout2D`, `setWorld`, `screenToWorld`, `drawPen2D`, `draw2D`. Portrait screens rotate the table 90°. |
 | `js/flow.js` | Turn and round state machine (`setupMatch`, `newRound`, `startTurn`, `doShot`, `endTurn`, `matchOver`), HUD and toasts |
 | `js/menu.js` | Home screen: mode and view tiles, pen cards, colour swatches, brand credits, shaded table background |
-| `js/share.js` | Result card: `grabView` copies the last frame, `drawResultCard` lays it out, `shareResult` uses the share sheet or downloads a PNG |
+| `js/share.js` | Result card: `grabView` photographs the table from a fixed camera at 1280 × 720, `drawResultCard` lays out the 1080 × 1350 card, `shareResult` shares the JPEG (image only) or downloads it |
 | `js/input.js` | Pointer events. Pressing on your own pen starts aiming. Dragging elsewhere orbits the camera (3D only). |
 | `assets/`, `tools/og-image.html` | Icons and the link preview image. `tools/og-image.html` redraws `og-image.png` with the game's own code; the command is in its header comment. Regenerate it when the pens or title change. |
 | `manifest.webmanifest`, `robots.txt`, `sitemap.xml` | Install metadata and crawler files |
@@ -44,6 +44,7 @@ Scripts load in this order, and each one only uses names from earlier files at l
 
 - **One source of truth for game state.** The `pens[]` array holds physics state, and both renderers only read from it. Never put gameplay logic inside a renderer.
 - **Pen definitions come from `penDef(id, color)`.** It merges the picked colour into a copy of the `PENS` entry. Renderers read `pens[i].def` and never look up `PENS` directly during a match.
+- **The camera never leaves the room.** Always place it through `camPos`; outside the walls the player sees only the back of a wall. Call `resetCam()` instead of setting a fixed view, so phones get a view that fits.
 - **Shared aim state.** `G.aimVis` holds the aim arrow `{cx, cz, ang, power, px?, pz?}` and is drawn by both views.
 - **Physics coordinates are world coordinates.** The table is centred at the origin, and its top is at y = `TOP`.
 - **A pen is out** when its centre leaves `|x| > HX` or `|z| > HZ`. It then gets a `falling` animation and is removed from physics.
@@ -62,7 +63,7 @@ Scripts load in this order, and each one only uses names from earlier files at l
 
 There are no automated tests. Before committing, check the following by hand:
 
-1. Serve the folder (`python3 -m http.server`) and open it on desktop and in a mobile viewport.
+1. Serve the folder (`python3 -m http.server`) and open it on desktop and in a phone-sized viewport, both portrait (about 390 × 780) and landscape (about 780 × 360).
 2. Play a full match against Rashed in 3D and another in 2D.
 3. Switch views in the middle of a turn using the 2D/3D button.
 4. Play a two-player match.

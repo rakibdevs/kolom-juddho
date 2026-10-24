@@ -7,10 +7,11 @@ let floorPat=null,woodPat=null,chairPat=null;
 const smudges=Array.from({length:7},()=>({x:(Math.random()-.5)*12,z:(Math.random()-.5)*6,r:.4+Math.random()*1.1}));
 function pat(canvas,scale){const p=g2.createPattern(canvas,'repeat');if(p&&p.setTransform&&window.DOMMatrix)p.setTransform(new DOMMatrix().scale(scale));return p;}
 function rr(g,x,y,w,h,r){r=Math.min(r,w/2,h/2);g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.arcTo(x+w,y,x+w,y+r,r);g.lineTo(x+w,y+h-r);g.arcTo(x+w,y+h,x+w-r,y+h,r);g.lineTo(x+r,y+h);g.arcTo(x,y+h,x,y+h-r,r);g.lineTo(x,y+r);g.arcTo(x,y,x+r,y,r);g.closePath();}
-function layout2D(){
-  const dpr=Math.min(window.devicePixelRatio||1,2),W=innerWidth,H=innerHeight;
+// W x H defaults to the screen. The share card passes its own size and `shot` to skip the HUD margins.
+function layout2D(W=innerWidth,H=innerHeight,shot=false){
+  const dpr=shot?1:Math.min(window.devicePixelRatio||1,2);
   if(c2.width!==Math.round(W*dpr)||c2.height!==Math.round(H*dpr)){c2.width=Math.round(W*dpr);c2.height=Math.round(H*dpr);}
-  const topRes=88,botRes=70,H2=H-topRes-botRes,portrait=H2>W*1.05;
+  const topRes=shot?16:88,botRes=shot?16:70,H2=H-topRes-botRes,portrait=H2>W*1.05;
   const s=portrait?Math.min(W/11,H2/17):Math.min(W/17.5,H2/11);
   T2={s,cx:W/2,cy:topRes+H2/2,portrait,dpr};
 }
@@ -58,13 +59,13 @@ function drawPen2D(g,p){
   g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=.02;rr(g,x0,-R*1.13,L-tl,R*2.26,R*.6);g.stroke();
   g.restore();
 }
-function draw2D(now){
-  layout2D();const g=g2,{s,dpr}=T2;
+function draw2D(now,W,H,shot){
+  layout2D(W,H,shot);const g=g2,{s,dpr}=T2;
   if(!floorPat){floorPat=pat(ART.floor,.012);woodPat=pat(ART.tableWood,.03);chairPat=pat(ART.darkWood,.03);}
   // floor
-  setWorld(g);g.fillStyle=floorPat||'#8a3a2a';g.fillRect(-40,-40,80,80);
+  setWorld(g);g.fillStyle=floorPat||'#8f8c84';g.fillRect(-40,-40,80,80);
   // dais
-  g.fillStyle='#9a948a';g.fillRect(-23,-12,46,17);
+  g.fillStyle='#b4ad9e';g.fillRect(-23,-12,46,17);
   g.fillStyle='rgba(0,0,0,.25)';g.fillRect(-23,5,46,.35);
   // blackboard strip on the front wall
   g.fillStyle='#6a4024';g.fillRect(-19.2,-12.6,38.4,1.1);g.fillStyle='#1f2b25';g.fillRect(-18,-12.4,36,.6);

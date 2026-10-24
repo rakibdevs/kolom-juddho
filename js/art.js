@@ -15,10 +15,13 @@ function woodCanvas(base,dark){
 }
 function floorCanvas(){
   return mkCanvas(512,512,(g,w,h)=>{
-    g.fillStyle='#8a3a2a';g.fillRect(0,0,w,h);
-    for(let i=0;i<6000;i++){g.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,220,200,.06)';g.fillRect(Math.random()*w,Math.random()*h,2,2);}
-    for(let i=0;i<14;i++){const x=Math.random()*w,y=Math.random()*h,r=30+Math.random()*90;const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(0,0,0,.07)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
-    g.strokeStyle='rgba(40,10,5,.25)';g.lineWidth=2;for(let i=0;i<=w;i+=128){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(w,i);g.stroke();}
+    // worn grey cement, the usual classroom floor: speckle, scuff patches, hairline cracks, joints
+    g.fillStyle='#8f8c84';g.fillRect(0,0,w,h);
+    for(let i=0;i<9000;i++){g.fillStyle=Math.random()<.5?'rgba(0,0,0,.07)':'rgba(255,255,255,.06)';g.fillRect(Math.random()*w,Math.random()*h,2,2);}
+    for(let i=0;i<20;i++){const x=Math.random()*w,y=Math.random()*h,r=30+Math.random()*100,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,i%3?'rgba(0,0,0,.08)':'rgba(255,255,255,.07)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
+    g.strokeStyle='rgba(40,38,34,.28)';g.lineWidth=1.2;
+    for(let i=0;i<6;i++){let x=Math.random()*w,y=Math.random()*h;g.beginPath();g.moveTo(x,y);for(let k=0;k<7;k++){x+=(Math.random()-.5)*40;y+=10+Math.random()*25;g.lineTo(x,y);}g.stroke();}
+    g.strokeStyle='rgba(30,28,25,.3)';g.lineWidth=2;for(let i=0;i<=w;i+=256){g.beginPath();g.moveTo(i,0);g.lineTo(i,h);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(w,i);g.stroke();}
   });
 }
 const ART={};
