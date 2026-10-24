@@ -121,6 +121,11 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .credits b{color:var(--ink)}
 .credits a{color:inherit}
 .credits .tech{font-size:13.5px}
+.ghrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:12px 0 8px}
+.credits .gh{display:inline-flex;align-items:center;gap:9px;background:var(--ink);color:var(--card);text-decoration:none;font-weight:700;font-size:15.5px;border-radius:999px;padding:10px 18px;min-height:44px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.credits .gh:hover{filter:brightness(1.12)}
+.gh:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
+.ghnote{flex:1 1 220px;font-size:13.5px}
 #shotPreview{display:block;width:auto;max-width:min(320px,70vw);max-height:36vh;margin:4px auto 0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 #shotPreview[hidden]{display:none}
 details{margin-top:18px;font-size:15.5px;line-height:1.7}

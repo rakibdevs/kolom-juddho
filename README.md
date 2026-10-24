@@ -4,6 +4,8 @@ A browser pen fight game set on the teacher's table in a 90s Bangladeshi classro
 
 Play in a full **3D classroom** modelled on a traditional Bangladeshi government school (blackboard, rows of wooden desks and benches, a village mural, tall grilled windows with wall charts, ceiling fans, the cane on Sir's chair, and an open door onto the school field with the national flag in front of the next building) or a clean **2D top-down table** that runs on older phones too.
 
+If you enjoy the game, please give the repository a star: **[github.com/rakibdevs/kolom-juddho](https://github.com/rakibdevs/kolom-juddho)** ⭐
+
 ## Features
 
 - **Play against Rashed (রাশেদ)**, a CPU opponent who simulates possible shots before choosing one. Three levels: নতুন, মোটামুটি, ওস্তাদ.
@@ -86,6 +88,7 @@ Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` 
 ├── robots.txt, sitemap.xml    # For search engines
 ├── .nojekyll                  # Tells Pages to serve files as-is
 ├── .github/workflows/pages.yml
+├── LICENSE                    # MIT
 ├── CONTRIBUTING.md            # How to add a pen, test and send a change
 ├── AGENTS.md                  # Instructions for AI coding agents
 ├── CLAUDE.md                  # Points Claude Code to AGENTS.md
@@ -107,4 +110,8 @@ All textures (the blackboard, wood, cement floor, village mural, wall charts and
 
 This is a fan-made nostalgia project. The pens are drawn from memory in the shapes and colours of pens many of us carried in school. The names and designs belong to their makers: Econo (Econo DX), Matador (Matador Pinpoint and Hi-School) and Hero (Hero Fountain Pen). No logos are used, and this project is not affiliated with or endorsed by any pen manufacturer. The same note is shown on the home screen.
 
-Add a license of your choice (for example MIT) before sharing the code publicly.
+## License
+
+Released under the [MIT License](./LICENSE). Copyright (c) 2026 Md. Rakibul Islam.
+
+You are free to use, copy, modify and share the code. The license covers this project's code and artwork only; pen brand names remain the trademarks of their owners.
