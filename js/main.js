@@ -13,9 +13,9 @@ function sync3D(now){
   });
   const a=G.aimVis;
   if(a){
-    const len=.5+a.power*3.2;arrow.visible=true;arrow.position.set(a.cx,TOP+.18,a.cz);arrow.rotation.set(0,-a.ang,0);
+    const len=.5+a.power*3.2*(a.sup?1.3:1);arrow.visible=true;arrow.position.set(a.cx,TOP+.18,a.cz);arrow.rotation.set(0,-a.ang,0);
     const sh=arrow.getObjectByName('shaft'),hd=arrow.getObjectByName('head');sh.scale.x=len;sh.position.x=len/2;hd.position.x=len+.28;
-    arrow.userData.mat.color.setHSL((1-a.power)*.33,.9,.52);
+    if(a.sup)arrow.userData.mat.color.set(0xffc61a);else arrow.userData.mat.color.setHSL((1-a.power)*.33,.9,.52);
     if(a.px!=null){const pos=pullLine.geometry.attributes.position;pos.setXYZ(0,a.cx,TOP+.15,a.cz);pos.setXYZ(1,a.px,TOP+.15,a.pz);pos.needsUpdate=true;pullLine.visible=true;}else pullLine.visible=false;
   } else {arrow.visible=false;pullLine.visible=false;}
   camPos(cam.yaw,cam.pitch,cam.dist,camera.position);

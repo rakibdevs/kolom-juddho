@@ -57,6 +57,7 @@ Scripts load in this order, and each one only uses names from earlier files at l
 - **Add a colour.** Add `[id, Bangla name, hex]` to the pen's `colors`. `paint` decides which parts take the colour.
 - **Tune feel.** Adjust `FRIC`, `LDAMP`, `AFRIC`, `ADAMP`, `REST` and `SPIN`. Play several rounds in both views before committing.
 - **Make Rashed stronger or weaker.** Edit the `cfg` table in `planShot`. Raising the sample count `n` costs CPU time; keep "hard" under about 50 ms on a mid-range phone.
+- **Tune the special power.** `SUPER` (`speed`, `mass`, and the on-hit `keep` and `grip`) and `SUPER_USES` are in `js/config.js`. The boost lives on `p.boost` from `doShot` until `endTurn` calls `clearBoost`; `brakeOnHit` in `physStep` applies the brake. Only human players get uses, and only `doShot` spends them.
 - **Rename the CPU.** Change `CPU`. Possessive forms use `${CPU}ের`, so check that the grammar still works with the new name.
 
 ## Testing checklist

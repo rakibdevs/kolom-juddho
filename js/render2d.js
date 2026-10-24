@@ -90,8 +90,8 @@ function draw2D(now,W,H,shot){
   const a=G.aimVis;
   if(a){
     if(a.px!=null){g.setLineDash([.18,.16]);g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=.05;g.beginPath();g.moveTo(a.cx,a.cz);g.lineTo(a.px,a.pz);g.stroke();g.setLineDash([]);}
-    const len=.5+a.power*3.2,ex=a.cx+Math.cos(a.ang)*len,ez=a.cz+Math.sin(a.ang)*len;
-    const col=`hsl(${Math.round((1-a.power)*120)},90%,52%)`;
+    const len=.5+a.power*3.2*(a.sup?1.3:1),ex=a.cx+Math.cos(a.ang)*len,ez=a.cz+Math.sin(a.ang)*len;
+    const col=a.sup?'#ffc61a':`hsl(${Math.round((1-a.power)*120)},90%,52%)`; // gold when ⚡ is armed
     g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=.22;g.lineCap='round';g.beginPath();g.moveTo(a.cx,a.cz);g.lineTo(ex,ez);g.stroke();
     g.strokeStyle=col;g.lineWidth=.14;g.beginPath();g.moveTo(a.cx,a.cz);g.lineTo(ex,ez);g.stroke();
     g.save();g.translate(ex,ez);g.rotate(a.ang);g.fillStyle=col;g.beginPath();g.moveTo(.55,0);g.lineTo(0,-.3);g.lineTo(0,.3);g.closePath();g.fill();g.restore();

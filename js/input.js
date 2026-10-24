@@ -28,7 +28,7 @@ function onMove(e){
     const pt=tablePoint(e);if(!pt)return;
     const px=aim.cx-pt.x,pz=aim.cz-pt.z,l=Math.hypot(px,pz);
     aim.power=clamp(l/3.5,0,1);if(l>1e-3){aim.dx=px/l;aim.dz=pz/l;}
-    if(aim.power>.04){G.aimVis={cx:aim.cx,cz:aim.cz,ang:Math.atan2(aim.dz,aim.dx),power:aim.power,px:pt.x,pz:pt.z};setHint(`শক্তি ${toBn(Math.round(aim.power*100))}% — ছেড়ে দিলেই টোকা`);}
+    if(aim.power>.04){const sup=G.armed===G.turn;G.aimVis={cx:aim.cx,cz:aim.cz,ang:Math.atan2(aim.dz,aim.dx),power:aim.power,px:pt.x,pz:pt.z,sup};setHint(`${sup?'⚡ ':''}শক্তি ${toBn(Math.round(aim.power*(sup?SUPER.speed:1)*100))}% — ছেড়ে দিলেই টোকা`);}
     else G.aimVis=null;
   } else if(orbit){
     cam.yaw=orbit.yaw-(e.clientX-orbit.x)*.006;cam.user=true;

@@ -44,10 +44,13 @@ function physStep(P,dt,onHit){
   }
   for(let i=0;i<P.length;i++)for(let k=i+1;k<P.length;k++){
     if(P[i].out||P[k].out)continue;
-    const j=collide(P[i],P[k]);if(j>0&&onHit)onHit(j);
+    const j=collide(P[i],P[k]);if(j>0){brakeOnHit(P[i]);brakeOnHit(P[k]);if(onHit)onHit(j);}
   }
   for(const p of P){if(!p.out&&(Math.abs(p.x)>HX||Math.abs(p.z)>HZ))p.out=true;}
 }
+// A ⚡ boosted pen (p.boost, set by doShot) brakes hard on its first hit.
+function brakeOnHit(p){const b=p.boost;if(!b||b.hit)return;b.hit=true;p.vx*=b.keep;p.vz*=b.keep;p.w*=b.keep;p.grip*=b.grip;}
+function clearBoost(p){const b=p.boost;if(!b)return;p.m=b.m;p.I=b.I;p.grip=b.g;p.boost=null;}
 function atRest(P){return P.every(p=>p.out||(Math.hypot(p.vx,p.vz)<0.02&&Math.abs(p.w)<0.05));}
 function applyShot(p,s,dx,dz,power){
   const J=p.m*p.speed*power,ca=Math.cos(p.a),sa=Math.sin(p.a),rx=ca*s,rz=sa*s;

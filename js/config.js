@@ -4,6 +4,10 @@
 const DAIS=1.2, TOP=DAIS+7.5, HX=7, HZ=4;
 const FRIC=6.5, LDAMP=0.5, AFRIC=10, ADAMP=1.8, REST=0.55, MU=0.25, SPIN=0.3;
 const TARGET=3, CPU='রাশেদ';
+// ⚡ সুপার টোকা: human players get SUPER_USES per match. An armed flick leaves `speed` times faster and hits
+// as if `mass` times heavier; on its first hit it keeps only `keep` of its speed and its grip rises `grip`
+// times, so it punches the other pen away but stays on the table itself.
+const SUPER={speed:1.35,mass:2.4,keep:.4,grip:3}, SUPER_USES=2;
 // Each pen is drawn from its parts (tip or nib, body, nose ring, rubber grip, cap, clip, gold trim)
 // in the colours of the real pen. `label` is plain text printed on the barrel; never add logos.
 // `colors` lists the colours a player can pick as [id, Bangla name, hex], and `paint` maps the
@@ -43,5 +47,5 @@ const FONT_UI='"Anek Bangla", sans-serif', FONT_CHALK='"Atma", "Anek Bangla", cu
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}
 const weekdayBn=()=>['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][new Date().getDay()];
 
-const G={mode:'cpu',diff:'medium',view:'3d',p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
+const G={mode:'cpu',diff:'medium',view:'3d',p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
 let pens=[],meshes=[],rings=[],muted=false,has3D=true;

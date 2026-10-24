@@ -10,6 +10,7 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
 
 - **Play against Rashed (রাশেদ)**, a CPU opponent who simulates possible shots before choosing one. Three levels: নতুন, মোটামুটি, ওস্তাদ.
 - **Two-player pass-and-play** on one phone or computer.
+- **⚡ সুপার টোকা**: twice per match, arm a super flick. Your pen goes a little faster and hits as if much heavier, then brakes on impact, so it knocks the other pen away while staying on the table. Only human players get it.
 - **Four 90s pens**, drawn in the shapes and colours of the real pens, each in four colours to pick from, with its own speed, weight and grip:
   - Econo DX: light and quick
   - Matador Pinpoint: balanced

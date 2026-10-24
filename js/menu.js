@@ -65,6 +65,7 @@ function wireMenu(){
   $('#bRematch').onclick=()=>{$('#endScreen').hidden=true;setupMatch();};
   $('#bChange').onclick=()=>{$('#endScreen').hidden=true;openMenu();};
   $('#bMenu').onclick=openMenu;
+  $('#bSuper').onclick=toggleSuper;
   $('#bView').onclick=()=>setView(G.view==='3d'?'2d':'3d');
   $('#bCam').onclick=resetCam;
   $('#bMute').onclick=()=>{muted=!muted;$('#bMute').textContent=muted?'🔇':'🔊';};

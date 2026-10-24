@@ -356,7 +356,8 @@ function buildScene(){
     const rot=new THREE.Group();rot.position.y=-3.2;g.add(rot);
     rot.add(new THREE.Mesh(new THREE.CylinderGeometry(.9,.75,.7,20),fanM));
     for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(6.8,.07,1.2),fanM);b.position.x=3.9;b.rotation.x=.12;const arm=new THREE.Group();arm.rotation.y=i*Math.PI*2/3;arm.add(b);rot.add(arm);}
-    g.traverse(o=>{if(o.isMesh)o.castShadow=true;});scene.add(g);fans.push(rot);
+    // no shadows: sunlight through the windows would project the blades onto the floor like a fan lying there
+    scene.add(g);fans.push(rot);
   });
 
   arrow=new THREE.Group();

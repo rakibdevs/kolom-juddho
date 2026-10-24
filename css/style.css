@@ -58,6 +58,16 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:8px 14px;font-size:14.5px;font-weight:500;max-width:min(560px,calc(100vw - 130px));text-align:center;pointer-events:none;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #tools{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;gap:8px;z-index:6}
 #tools button{min-width:46px;height:46px;border-radius:12px;border:1px solid var(--hud-line);background:var(--hud);font-size:18px;font-weight:700;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+/* ⚡ special power button, bottom-left; gold and pulsing while armed */
+#bSuper{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:6;display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 8px 6px 14px;border-radius:999px;border:2px solid #d9a520;background:var(--hud);font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#bSuper[hidden]{display:none}
+#bSuper .ic{font-size:22px;line-height:1}
+#bSuper b{min-width:30px;height:30px;border-radius:50%;background:#d9a520;color:#1a1a12;display:grid;place-items:center;font-size:16px}
+#bSuper[aria-pressed="true"]{background:#ffd23f;color:#1a1a12;border-color:#fff3b0;box-shadow:0 0 0 4px rgba(255,210,63,.35),0 0 24px rgba(255,200,40,.7);animation:superPulse 1s ease-in-out infinite}
+#bSuper[aria-pressed="true"] b{background:#1a1a12;color:#ffd23f}
+#bSuper:disabled{opacity:.45;cursor:not-allowed}
+@keyframes superPulse{50%{transform:scale(1.06)}}
+.spc{margin-left:6px;font-size:12px;font-weight:700;color:#d9a520;line-height:12px;align-self:center}
 #toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.9);opacity:0;pointer-events:none;z-index:7;text-align:center;transition:opacity .25s,transform .25s;width:min(92vw,640px)}
 #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #toast .big{font-weight:700;font-size:clamp(28px,6vw,52px);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.4),0 0 24px rgba(0,0,0,.5);line-height:1.15}
@@ -196,6 +206,8 @@ button,.tile,.pencard,.swatch,summary{touch-action:manipulation;-webkit-tap-high
   .pcard .who{font-size:14px}
   .pcard .pen{font-size:12px}
   #hint{font-size:13px}
+  #bSuper{bottom:calc(env(safe-area-inset-bottom,0px) + 78px);padding:5px 6px 5px 10px}
+  #bSuper .lb{display:none}
 }
 /* the turn pill moves under the score cards when they would touch */
 @media (max-width:420px){
@@ -216,6 +228,8 @@ button,.tile,.pencard,.swatch,summary{touch-action:manipulation;-webkit-tap-high
   .dots{margin-top:3px}
   #tools{gap:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
   #tools button{min-width:40px;height:40px;font-size:16px}
+  #bSuper{bottom:calc(env(safe-area-inset-bottom,0px) + 8px);min-height:44px}
+  #bSuper .lb{display:none}
   .endwrap{padding:10px 16px}
   .endcard{max-width:820px;display:grid;grid-template-columns:auto 1fr;column-gap:20px;align-items:center;text-align:left}
   .endcard .hero,.endcard p,.endcard .row{grid-column:2}
@@ -226,4 +240,4 @@ button,.tile,.pencard,.swatch,summary{touch-action:manipulation;-webkit-tap-high
   .endcard .row{justify-content:flex-start;margin-top:0}
   .endcard .row button{padding:10px 14px;font-size:15px;min-width:0}
 }
-@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}#bSuper[aria-pressed="true"]{animation:none}}
