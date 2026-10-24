@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>কলম যুদ্ধ — Pen Fight | ৯০-এর ক্লাসরুমের কলম খেলা</title>
+<!-- SEO. __SITE_URL__ is replaced with the live address by .github/workflows/pages.yml at deploy time. -->
+<meta name="description" content="কলম যুদ্ধ: ৯০-এর দশকের ক্লাসরুমে স্যারের টেবিলে টোকা দিয়ে বন্ধুর কলম ফেলে দেওয়ার খেলা। Econo, Matador বা Hero বেছে রাশেদ বা বন্ধুর সাথে খেলো, 3D বা 2D-তে, একদম ফ্রি।">
+<meta name="keywords" content="কলম যুদ্ধ, কলম খেলা, pen fight, pen fight game, kolom juddho, Bangla game, বাংলা গেম, Econo DX, Matador, Hero pen, 90s classroom">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="__SITE_URL__/">
+<meta name="theme-color" content="#22342b">
+<meta name="color-scheme" content="light dark">
+<meta name="application-name" content="কলম যুদ্ধ">
+<meta name="apple-mobile-web-app-title" content="কলম যুদ্ধ">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+
+<!-- Link previews (Facebook, WhatsApp, Messenger, LinkedIn, Telegram, X) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="কলম যুদ্ধ">
+<meta property="og:locale" content="bn_BD">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="__SITE_URL__/">
+<meta property="og:title" content="কলম যুদ্ধ — Pen Fight">
+<meta property="og:description" content="টিফিন পিরিয়ড, স্যারের টেবিল, আর তোমার প্রিয় কলম। রাশেদ বা বন্ধুর সাথে কলম যুদ্ধ খেলো, 3D বা 2D-তে।">
+<meta property="og:image" content="__SITE_URL__/assets/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="চকবোর্ডে লেখা ‘কলম যুদ্ধ’, নিচে স্যারের টেবিলে চারটি কলম">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="কলম যুদ্ধ — Pen Fight">
+<meta name="twitter:description" content="টিফিন পিরিয়ড, স্যারের টেবিল, আর তোমার প্রিয় কলম। রাশেদ বা বন্ধুর সাথে কলম যুদ্ধ খেলো।">
+<meta name="twitter:image" content="__SITE_URL__/assets/og-image.png">
+<meta name="twitter:image:alt" content="চকবোর্ডে লেখা ‘কলম যুদ্ধ’, নিচে স্যারের টেবিলে চারটি কলম">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "কলম যুদ্ধ",
+  "alternateName": ["Pen Fight", "Kolom Juddho"],
+  "url": "__SITE_URL__/",
+  "image": "__SITE_URL__/assets/og-image.png",
+  "description": "কলম যুদ্ধ: ৯০-এর দশকের ক্লাসরুমে স্যারের টেবিলে টোকা দিয়ে বন্ধুর কলম ফেলে দেওয়ার খেলা। Econo, Matador বা Hero বেছে রাশেদ বা বন্ধুর সাথে খেলো, 3D বা 2D-তে, একদম ফ্রি।",
+  "inLanguage": "bn",
+  "genre": ["Casual", "Physics", "Sports"],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "playMode": ["SinglePlayer", "MultiPlayer"],
+  "numberOfPlayers": {"@type": "QuantitativeValue", "minValue": 1, "maxValue": 2},
+  "isAccessibleForFree": true,
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BDT", "availability": "https://schema.org/InStock"}
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700&family=Atma:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="c" class="view" tabindex="0" aria-label="3D classroom pen fight"></canvas>
+<canvas id="c2" class="view" tabindex="0" aria-label="2D top-down pen fight" style="display:none"></canvas>
+<div id="loading">চক দিয়ে বোর্ডে লিখছি…</div>
+<noscript>
+  <div style="position:fixed;inset:0;z-index:30;background:#22342b;color:#f4f2ea;padding:32px 20px;font-family:sans-serif;line-height:1.6">
+    <h1>কলম যুদ্ধ — Pen Fight</h1>
+    <p>৯০-এর দশকের ক্লাসরুমে স্যারের টেবিলে কলম দিয়ে টোকা মেরে বন্ধুর কলম ফেলে দেওয়ার খেলা। খেলতে হলে ব্রাউজারে JavaScript চালু করো।</p>
+    <p>A pen fight game on the teacher's table in a 90s Bangladeshi classroom. Please turn on JavaScript to play.</p>
+  </div>
+</noscript>
+
+<div id="hud" hidden>
+  <div class="pcard p1" id="card0"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
+  <div id="turn"></div>
+  <div class="pcard p2" id="card1"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
+</div>
+<div id="hint" hidden></div>
+<div id="tools" hidden>
+  <button id="bView" aria-label="Switch between 2D and 3D" title="2D / 3D">2D</button>
+  <button id="bCam" aria-label="Reset camera" title="Reset camera">🎥</button>
+  <button id="bMute" aria-label="Sound on or off" title="Sound">🔊</button>
+  <button id="bMenu" aria-label="Open home screen" title="Home">☰</button>
+</div>
+<div id="toast"><div class="big"></div><div class="small"></div></div>
+
+<!-- Home -->
+<div class="overlay" id="menu" hidden>
+  <canvas id="tablebg" aria-hidden="true"></canvas>
+  <div class="tableshade" aria-hidden="true"></div>
+  <div class="home">
+    <header class="hero">
+      <div class="date" id="boardDate"></div>
+      <h1>কলম যুদ্ধ</h1>
+      <div class="en">Pen fight on Sir’s table</div>
+      <div class="challenge" id="challenge"></div>
+    </header>
+
+    <section class="panel">
+      <div class="step"><span class="num">১</span><h2>কার সাথে খেলবে?</h2></div>
+      <div class="tiles" id="segMode">
+        <button class="tile" data-v="cpu"><span class="ic">🧑‍🎓</span><span><span class="t">রাশেদের সাথে</span><span class="d">পাশের বেঞ্চের রাশেদ, কম্পিউটার চালিত</span></span></button>
+        <button class="tile" data-v="2p"><span class="ic">👥</span><span><span class="t">দুই বন্ধু মিলে</span><span class="d">একই ফোন বা কম্পিউটারে পালা করে</span></span></button>
+      </div>
+
+      <div id="diffGroup" style="margin-top:22px">
+        <div class="step"><span class="num">২</span><h2>রাশেদ কতটা পাকা?</h2></div>
+        <div class="tiles three" id="segDiff">
+          <button class="tile" data-v="easy">নতুন</button>
+          <button class="tile" data-v="medium">মোটামুটি</button>
+          <button class="tile" data-v="hard">ওস্তাদ</button>
+        </div>
+      </div>
+
+      <div style="margin-top:22px">
+        <div class="step"><span class="num" id="numView">৩</span><h2>কীভাবে দেখবে?</h2></div>
+        <div class="tiles" id="segView">
+          <button class="tile" data-v="3d"><span class="ic">🏫</span><span><span class="t">3D ক্লাসরুম</span><span class="d" id="d3">বোর্ড, বেঞ্চ, পাখা — চারপাশ ঘুরে দেখো</span></span></button>
+          <button class="tile" data-v="2d"><span class="ic">🔲</span><span><span class="t">2D টেবিল</span><span class="d">উপর থেকে দেখা, পরিষ্কার আর পুরনো ফোনেও চলে</span></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="step"><span class="num" id="numPen">৪</span><h2>কলম আর রং বাছাই করো</h2></div>
+      <div class="pickhead"><span class="sw" style="background:var(--p1)"></span><span id="lab1"></span></div>
+      <div class="pengrid" id="grid1"></div>
+      <div class="swatches" role="group" aria-label="তোমার কলমের রং"></div>
+      <div class="pickhead"><span class="sw" style="background:var(--p2)"></span><span id="lab2"></span></div>
+      <div class="pengrid opp" id="grid2"></div>
+      <div class="swatches opp" role="group" aria-label="প্রতিপক্ষের কলমের রং"></div>
+
+      <details>
+        <summary>কীভাবে খেলবে</summary>
+        <p>নিজের কলমের যে জায়গায় টোকা দিতে চাও, সেখানে চেপে ধরে উল্টো দিকে টানো, তারপর ছেড়ে দাও — ঠিক গুলতির মতো। যত বেশি টানবে, তত জোরে যাবে।</p>
+        <p>কলমের মাঝখানে মারলে সোজা যায়, মাথার দিকে মারলে ঘুরতে ঘুরতে যায়। বন্ধুর কলম টেবিল থেকে ফেলে দিলে রাউন্ড তোমার, কিন্তু নিজের কলম পড়ে গেলে রাউন্ড হার। আগে ৩ রাউন্ড জিতলেই চ্যাম্পিয়ন।</p>
+        <p>3D-তে ফাঁকা জায়গায় টেনে ক্লাসরুম ঘোরাও, স্ক্রল বা পিঞ্চ করে জুম করো। খেলার মাঝে নিচের বোতাম দিয়ে 2D/3D বদলাতে পারবে।</p>
+      </details>
+    </section>
+
+    <footer class="credits">
+      <h2>কৃতজ্ঞতা</h2>
+      <p>কলমগুলোর নাম, চেহারা আর রং আসল কলমের স্মৃতি থেকে আঁকা। নাম ও ডিজাইনের সব কৃতিত্ব তাদের নির্মাতাদের:</p>
+      <ul id="penCredits"></ul>
+      <p>এটা ছোটবেলার স্মৃতি নিয়ে ভক্তদের বানানো একটা খেলা। কোনো কলম কোম্পানির সাথে এর সম্পর্ক নেই, তাদের অনুমোদনও নেই। সব ট্রেডমার্ক তাদের নিজ নিজ মালিকের।</p>
+      <p class="tech">3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> · ফন্ট: Anek Bangla, Atma, Kalam (Google Fonts)</p>
+    </footer>
+  </div>
+  <div class="startbar">
+    <button class="ghost" id="bResume" hidden>খেলায় ফিরে যাও</button>
+    <button class="primary" id="bStart">খেলা শুরু করো</button>
+  </div>
+</div>
+
+<!-- End -->
+<div class="overlay" id="endScreen" hidden>
+  <div class="endwrap"><div class="endcard">
+    <header class="hero"><h2 class="title" id="endTitle"></h2><div class="challenge" id="endScore"></div></header>
+    <p id="endText"></p>
+    <img id="shotPreview" alt="ফলাফলের ছবি" hidden>
+    <div class="row">
+      <button class="ghost" id="bShare">📸 ছবি শেয়ার করো</button>
+      <button class="primary" id="bRematch">আবার খেলো</button>
+      <button class="ghost" id="bChange">হোমে ফিরে যাও</button>
+    </div>
+  </div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/cpu.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/art.js"></script>
+<script src="js/scene3d.js"></script>
+<script src="js/render2d.js"></script>
+<script src="js/flow.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/input.js"></script>
+<script src="js/share.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

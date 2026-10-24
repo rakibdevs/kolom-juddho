@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Renders assets/og-image.png (1200 x 630), the link preview for social apps and search results.
+     It reuses the game's own drawing code. To regenerate, serve the repo root and run:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+       --window-size=1200,630 --virtual-time-budget=6000 --screenshot=assets/og-image.png \
+       http://localhost:8000/tools/og-image.html -->
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>OG image</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&family=Atma:wght@600;700&family=Kalam:wght@400&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#3d2210}
+canvas{display:block}
+</style>
+</head>
+<body>
+<canvas id="og" width="1200" height="630"></canvas>
+<canvas id="c2" hidden></canvas>
+<script src="../js/config.js"></script>
+<script src="../js/art.js"></script>
+<script src="../js/render2d.js"></script>
+<script>
+"use strict";
+(async()=>{
+  await Promise.all([document.fonts.load('700 120px Atma','কলম যুদ্ধ'),document.fonts.load('600 40px "Anek Bangla"','খেলা'),document.fonts.load('400 40px Kalam','Pen')]);
+  buildArt();
+  const g=$('#og').getContext('2d'),W=1200,H=630;
+  drawTableTop(g,W,H);
+  const sh=g.createRadialGradient(W/2,H/2,W*.15,W/2,H/2,W*.75);sh.addColorStop(0,'rgba(20,10,4,.15)');sh.addColorStop(1,'rgba(20,10,4,.65)');g.fillStyle=sh;g.fillRect(0,0,W,H);
+  // chalkboard
+  const bx=170,by=70,bw=860,bh=340;
+  g.fillStyle='rgba(0,0,0,.35)';rr(g,bx+8,by+14,bw,bh,10);g.fill();
+  g.fillStyle='#6a4024';rr(g,bx,by,bw,bh,10);g.fill();g.fillStyle='#22342b';g.fillRect(bx+18,by+18,bw-36,bh-36);
+  g.fillStyle='#f4f2ea';g.textAlign='center';g.textBaseline='alphabetic';
+  g.font=`700 128px ${FONT_CHALK}`;g.fillText('কলম যুদ্ধ',W/2,by+170);
+  g.font='400 40px Kalam, cursive';g.globalAlpha=.9;g.fillText('Pen fight on Sir’s table',W/2,by+228);g.globalAlpha=1;
+  g.fillStyle='#f3e58c';g.font=`600 34px ${FONT_CHALK}`;g.fillText('টিফিন পিরিয়ডে বন্ধুর কলম টেবিল থেকে ফেলে দাও!',W/2,by+292);
+  // four pens below the board
+  PENS.forEach((p,i)=>{g.save();g.translate(420+i*175,505+(i%2)*36);g.rotate(i%2?.18:-.18);g.scale(120,120);drawPen2D(g,{def:penDef(p.id),x:0,z:0,a:0});g.restore();});
+  g.fillStyle='rgba(255,255,255,.9)';g.font=`600 26px ${FONT_UI}`;g.fillText('3D আর 2D · রাশেদ বা বন্ধুর সাথে · ফ্রি ব্রাউজার গেম',W/2,H-22);
+  document.title='ready';
+})();
+</script>
+</body>
+</html>

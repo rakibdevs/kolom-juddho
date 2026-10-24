@@ -1,0 +1,53 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare site folder
+        run: |
+          mkdir -p _site
+          cp -r index.html css js assets manifest.webmanifest robots.txt sitemap.xml _site/
+          touch _site/.nojekyll
+
+      # Canonical links, link previews, robots.txt and the sitemap need the absolute site address.
+      - name: Fill in site URL and date
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          grep -rl --include='*.html' --include='*.xml' --include='*.txt' -e '__SITE_URL__' -e '__BUILD_DATE__' _site \
+            | xargs sed -i -e "s|__SITE_URL__|${SITE_URL%/}|g" -e "s|__BUILD_DATE__|$(date -u +%F)|g"
+          if grep -rq '__SITE_URL__' _site; then echo 'A __SITE_URL__ placeholder was not filled in'; exit 1; fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
