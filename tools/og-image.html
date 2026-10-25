@@ -36,9 +36,10 @@ canvas{display:block}
   g.font=`700 128px ${FONT_DISPLAY}`;g.fillText('কলম যুদ্ধ',W/2,by+170);
   g.font=`600 40px ${FONT_DISPLAY}`;g.globalAlpha=.9;g.fillText('স্যারের টেবিলে কলমের লড়াই',W/2,by+228);g.globalAlpha=1;
   g.fillStyle='#f3e58c';g.font=`600 34px ${FONT_DISPLAY}`;g.fillText('টিফিন পিরিয়ডে বন্ধুর কলম টেবিল থেকে ফেলে দাও!',W/2,by+292);
-  // four pens below the board
-  PENS.forEach((p,i)=>{g.save();g.translate(420+i*175,505+(i%2)*36);g.rotate(i%2?.18:-.18);g.scale(120,120);drawPen2D(g,{def:penDef(p.id),x:0,z:0,a:0});g.restore();});
-  g.fillStyle='rgba(255,255,255,.9)';g.font=`600 26px ${FONT_UI}`;g.fillText('3D আর 2D · রাশেদ বা বন্ধুর সাথে · ফ্রি ব্রাউজার গেম',W/2,H-22);
+  // every pen below the board, spread across the width and tilted alternately
+  const step=(W-260)/(PENS.length-1);
+  PENS.forEach((p,i)=>{g.save();g.translate(130+i*step,500+(i%2)*40);g.rotate(i%2?.5:-.5);g.scale(92,92);drawPen2D(g,{def:penDef(p.id,p.colors[i%p.colors.length][0]),x:0,z:0,a:0});g.restore();});
+  g.fillStyle='rgba(255,255,255,.9)';g.font=`600 26px ${FONT_UI}`;g.fillText('৮টা স্কুলের কলম · রাশেদ বা বন্ধুর সাথে · ফ্রি ব্রাউজার গেম',W/2,H-22);
   document.title='ready';
 })();
 </script>

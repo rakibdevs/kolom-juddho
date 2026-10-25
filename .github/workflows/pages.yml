@@ -38,7 +38,9 @@ jobs:
       # sw.js takes the build date as its cache version.
       - name: Fill in site URL and date
         env:
-          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          # the main address when the repository variable SITE_URL is set (this copy then points search engines
+          # there), otherwise this Pages address
+          SITE_URL: ${{ vars.SITE_URL || steps.pages.outputs.base_url }}
         run: |
           grep -rl --include='*.html' --include='*.xml' --include='*.txt' --include='sw.js' -e '__SITE_URL__' -e '__BUILD_DATE__' _site \
             | xargs sed -i -e "s|__SITE_URL__|${SITE_URL%/}|g" -e "s|__BUILD_DATE__|$(date -u +%F)|g"

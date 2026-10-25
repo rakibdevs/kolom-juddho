@@ -30,8 +30,17 @@ function copy(rel) {
 }
 FILES.forEach(copy);
 
+const host = new URL(site).host.replace(/^www\./, ''), scheme = new URL(site).protocol;
 fs.writeFileSync(path.join(out, '.htaccess'), `# কলম যুদ্ধ on Apache or LiteSpeed
 DirectoryIndex index.html
+# one address only: https, no www, and / rather than /index.html, so search engines see a single copy
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+${scheme === 'https:' ? '  RewriteCond %{HTTPS} !=on [OR]\n' : ''}  RewriteCond %{HTTP_HOST} !^${host.replace(/\./g, '\\.')}$ [NC]
+  RewriteRule ^ ${scheme}//${host}%{REQUEST_URI} [R=301,L]
+  RewriteCond %{THE_REQUEST} \\s/+index\\.html[\\s?] [NC]
+  RewriteRule ^index\\.html$ / [R=301,L]
+</IfModule>
 AddType application/manifest+json .webmanifest
 AddType text/javascript .js
 <IfModule mod_headers.c>
