@@ -22,6 +22,7 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
   - Hero 616: steel cap, steady
 - **Pick your pen**: any pen in any colour, as often as you like. Against the computer, Rashed gets a random pen. Pens are fixed once a match starts.
 - **Rename anyone**: your name, Rashed's, or both players' in two-player mode.
+- **Live player count**: how many people are online and in a match right now, from an optional Cloudflare Worker that stores nothing.
 - **Challenge links**: after a match, send a friend a link. They play the computer playing as you, with your pen at your level, and can send a challenge back. Nothing goes to a server; it's all in the link.
 - **3D and 2D views** that share the same physics. You can switch between them mid-match.
 - Real 2D rigid-body physics: off-centre hits make the pen spin, and heavier pens hit harder.
@@ -73,6 +74,19 @@ python3 -m http.server 8000
 
 Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` and `/ (root)`. You can delete the `.github` folder if you use this option. With this option, nothing fills in the site address, so replace every `__SITE_URL__` in `index.html`, `robots.txt` and `sitemap.xml` with your live address (no trailing slash), and `__BUILD_DATE__` in `sitemap.xml` with today's date.
 
+## Live player count (optional, Cloudflare)
+
+The chalkboard can show **🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন**. The count comes from a tiny Cloudflare Worker in `worker/`: one Durable Object holds a WebSocket per open game and tells everyone the totals. It stores nothing and receives only whether a tab is in a match. It runs on the Workers free plan.
+
+1. Log in once: `cd worker && npx wrangler login`.
+2. In `worker/wrangler.toml`, list the pages allowed to connect in `ALLOWED_ORIGINS` (your Pages or custom domain).
+3. Deploy: `npx wrangler deploy`. It prints an address like `https://kolom-juddho-live.<you>.workers.dev`.
+4. Put that address, as `wss://kolom-juddho-live.<you>.workers.dev/live`, into `LIVE_URL` in `js/config.js` and deploy the site.
+
+With `LIVE_URL` empty the game never connects, and the count hides itself whenever the Worker can't be reached.
+
+To try it locally, run `npx wrangler dev --port 8787` in `worker/` and set `LIVE_URL` to `ws://127.0.0.1:8787/live`.
+
 **After the first deploy**, add the site to [Google Search Console](https://search.google.com/search-console) and submit `sitemap.xml`. You can check the link preview with the [Facebook sharing debugger](https://developers.facebook.com/tools/debug/).
 
 ## Project structure
@@ -94,12 +108,14 @@ Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` 
 │   ├── menu.js                # Home screen
 │   ├── share.js               # Result image
 │   ├── challenge.js           # Challenge links
+│   ├── live.js                # Live player count (connects to worker/)
 │   ├── input.js               # Pointer input
 │   └── main.js                # Game loop and boot
 ├── assets/                    # Icons and og-image.png (link preview)
 ├── tools/og-image.html        # Redraws og-image.png with the game's code
 ├── manifest.webmanifest       # Install name, colours and icons
 ├── sw.js                      # Service worker for offline play
+├── worker/                    # Cloudflare Worker + Durable Object for the live count
 ├── robots.txt, sitemap.xml    # For search engines
 ├── .nojekyll                  # Tells Pages to serve files as-is
 ├── .github/workflows/pages.yml

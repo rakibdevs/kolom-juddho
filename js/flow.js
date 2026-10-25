@@ -34,7 +34,7 @@ function setupMatch(){
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
   resetCam();setView(G.view);newRound();
   if(G.mode==='cpu')setTimeout(()=>toast(`${rival()} আনল ${pens[1].def.name}`,`${pens[1].def.colorBn} রঙের`),350);
-  bell(false);setTimeout(()=>say('start'),2300);
+  bell(false);live.update();setTimeout(()=>say('start'),2300);
 }
 function newRound(){
   const z0=(Math.random()-.5)*1.6;
@@ -110,7 +110,7 @@ function endTurn(){
 }
 function matchOver(w){
   G.state='matchover';G.matchLive=false;G.aimVis=null;G.cpuAnim=null;hideBubble();
-  bell(true);
+  bell(true);live.update();
   const cpuWon=G.mode==='cpu'&&w===1,ch=G.challenge;
   $('#endTitle').textContent=ch?(cpuWon?`${poss(rival())} চ্যালেঞ্জ টিকে গেল!`:'চ্যালেঞ্জ জিতেছ!'):cpuWon?`${rival()} জিতে গেল!`:`${who(w)} চ্যাম্পিয়ন!`;
   $('#endScore').textContent=`স্কোর ${toBn(G.score[0])} – ${toBn(G.score[1])}`;

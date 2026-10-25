@@ -71,6 +71,7 @@ async function init(){
   addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(!cam.user)resetCam();}});
   $('#loading').remove();$('#menu').hidden=false;refreshMenu();drawTableBg();
   requestAnimationFrame(t=>{last=t;frame(t);});
+  live.connect();
   // Offline play on the published site. Skipped on file:// and on local servers, so edits show up at once.
   if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 }

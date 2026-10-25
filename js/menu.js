@@ -139,7 +139,7 @@ function wireMenu(){
   $('#segSheet').onclick=e=>{const b=e.target.closest('button');if(b)openSheet(b.dataset.v);};
   document.querySelectorAll('#sheet [data-close]').forEach(b=>b.onclick=closeSheet);
   $('#sheet').onkeydown=e=>{if(e.key==='Escape'){e.stopPropagation();closeSheet();}};
-  $('#bEndMatch').onclick=()=>{G.matchLive=false;G.prevState='menu';refreshMenu();};
+  $('#bEndMatch').onclick=()=>{G.matchLive=false;G.prevState='menu';live.update();refreshMenu();};
   $('#bShare').onclick=shareFacebook;
   $('#bSave').onclick=()=>{saveShot();shareNote('ছবিটা ডাউনলোড হয়েছে।');};
   $('#bStart').onclick=()=>{ensureAudio();$('#menu').hidden=true;setupMatch();};

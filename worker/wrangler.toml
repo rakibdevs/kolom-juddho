@@ -1,0 +1,18 @@
+# Live player counter (see src/index.js). Deploy from this folder with:  npx wrangler deploy
+# Then put the printed address, as wss://…/live, into LIVE_URL in js/config.js.
+name = "kolom-juddho-live"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
+# SQLite-backed Durable Objects run on the Workers free plan. The lobby stores nothing.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Lobby"]
+
+[vars]
+# Pages allowed to connect, comma separated. Add your Cloudflare Pages or custom domain here.
+ALLOWED_ORIGINS = "https://rakibdevs.github.io,http://localhost:8765"

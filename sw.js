@@ -5,7 +5,7 @@
 
 const VERSION='__BUILD_DATE__',CACHE=`kolom-juddho-${VERSION}`;
 const CORE=['./','index.html','css/style.css','manifest.webmanifest','assets/icon.svg','assets/icon-192.png',
-  ...['config','physics','cpu','sound','art','scene3d','render2d','flow','tutorial','menu','share','challenge','input','main'].map(f=>`js/${f}.js`),
+  ...['config','physics','cpu','sound','art','scene3d','render2d','flow','tutorial','menu','share','challenge','live','input','main'].map(f=>`js/${f}.js`),
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'];
 // Other hosts whose files are worth keeping offline.
 const HOSTS=['cdnjs.cloudflare.com','fonts.googleapis.com','fonts.gstatic.com'];

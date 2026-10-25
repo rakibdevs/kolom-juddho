@@ -26,7 +26,7 @@ It must stay one-thumb playable on a cheap phone, Bangla first, offline after th
 3. **Short sessions.** A match should take three minutes or less, the length of a tiffin break.
 4. **Bangla first.** Bengali digits, typographic punctuation, and the 90s Dhaka-classroom voice.
 5. **Draw everything in code.** No logos, no image or audio files, and the game keeps working offline.
-6. **Respect players.** No ads, no tracking, no dark patterns. Progress lives on the device.
+6. **Respect players.** No ads, no tracking, no dark patterns. Progress lives on the device. The live count is anonymous and stores nothing.
 7. **Pens are free.** Any pen in any colour, with no unlocks or use limits. The computer's pen is random, and pens can't change during a match.
 8. **Everyone can be renamed.** Every character a player meets, including future rivals, takes a custom name; use `rival()` and `poss()`.
 
@@ -52,7 +52,6 @@ Effort sizes: **S** is a day or less, **M** is two to four days, **L** is a week
 ## Phase 4: seasons and extras (backlog)
 
 - **Seasons:** rain on the windows during বর্ষা, পহেলা বৈশাখ decorations, and exam-season chalk on the board. Anything for 21 February must be handled with care and respect.
-- **Live player count:** Supabase Realtime presence ("🟢 এখন খেলছে: ১২ জন"). It is optional and hides itself when offline.
 - **English toggle** for the diaspora; the strings move into a small table.
 - **Accessibility:** a high-contrast theme, a left-handed HUD, and a reduced-motion version of the camera.
 

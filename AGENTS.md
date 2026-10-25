@@ -8,7 +8,7 @@ Instructions for AI coding agents (Claude Code, Codex, Copilot and similar) work
 
 ## Hard rules
 
-- **No build step.** `index.html` loads `css/style.css` and the plain scripts in `js/` in a fixed order. Do not add a bundler, framework, npm or build step unless the maintainer asks for one.
+- **No build step.** `index.html` loads `css/style.css` and the plain scripts in `js/` in a fixed order. Do not add a bundler, framework, npm or build step unless the maintainer asks for one. The only exception is `worker/`, which is deployed with `npx wrangler` and never loaded by the page.
 - **Classic scripts, not ES modules.** The `js/` files share top-level globals, and the game must still open from `file://`, which modules break. Keep the load order in `index.html` and do not reuse a top-level name in two files.
 - **Do not upgrade three.js casually.** The game uses the global-script build of **three.js r128** from cdnjs (`window.THREE`). Newer versions drop that build and change APIs (for example, `CapsuleGeometry` only exists in r142+). Any upgrade must switch to ES modules and be tested in both views.
 - **Pin every CDN URL to an exact version.** Never use `@latest` or a version range.
@@ -37,9 +37,11 @@ Scripts load in this order, and each one only uses names from earlier files at l
 | `js/menu.js` | Home screen as a game title screen: top bar (date, sheet links), chalkboard, and the match card: mode tabs, per side a name field and a ◀ pen ▶ carousel with stats, colour dots and pen dots (`buildSide`); the computer's side shows the rival with his difficulty, and his pen during a match; pickers lock while `G.matchLive`. One sticky ▶ button. Rules, memories and credits sit in a tabbed sheet (`openSheet`/`closeSheet`). Also remembered setup (`loadSetup`/`saveSetup`), brand credits and the shaded table background |
 | `js/share.js` | Result card: `grabView` photographs the table from a fixed camera at 1280 × 720, `drawResultCard` lays out the 1080 × 1350 card, `shareFacebook` posts it (phones: share sheet → Facebook app; desktop: save photo, copy caption, open Facebook, because websites cannot attach photos to Facebook posts), `saveShot` downloads it |
 | `js/challenge.js` | Challenge links. `readChallenge` validates `?from=&pen=&col=&lvl=&score=` into `G.challenge` and strips the query; while it is set, `rival()` and `level()` return the challenger's name and level and `cpuPen` returns `challengePen()`. `sendChallenge` shares or copies a link with the player's name, pen, level and score from the end screen. |
+| `js/live.js` | `live`: keeps a WebSocket to `LIVE_URL` (empty = off), sends only `{playing}` when a match starts or ends (`live.update()`), shows `#live` on the chalkboard, and reconnects with backoff. |
 | `js/input.js` | Pointer events. Pressing on your own pen starts aiming. Dragging elsewhere orbits the camera (3D only). |
 | `assets/`, `tools/og-image.html` | Icons and the link preview image. `tools/og-image.html` redraws `og-image.png` with the game's own code; the command is in its header comment. Regenerate it when the pens or title change. |
 | `manifest.webmanifest`, `robots.txt`, `sitemap.xml` | Install metadata and crawler files |
+| `worker/` | Cloudflare Worker (`src/index.js`, `wrangler.toml`) for the live count: `/live` upgrades to a WebSocket held by the `Lobby` Durable Object (hibernation API), which broadcasts `{online, playing}`. Origins are checked against `ALLOWED_ORIGINS`. It is deployed separately with `npx wrangler deploy` and is not part of the site. |
 | `sw.js` | Service worker for offline play: precaches `CORE` (the page, styles, every script, three.js), then serves same-origin files, cdnjs and Google Fonts stale-while-revalidate. `VERSION` is `__BUILD_DATE__`, filled in by the deploy workflow. Registered from `main.js` only over https, so local servers always show fresh files. |
 | `js/main.js` | Fixed-step physics at 1/480 s, falling animation, render 3D or 2D, then `init` |
 

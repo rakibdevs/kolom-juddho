@@ -108,6 +108,8 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .hero .en{font-family:"Kalam",cursive;font-size:clamp(20px,2.4vw,30px);margin-top:6px;opacity:.9}
 .hero .challenge{margin-top:18px;font-size:clamp(18px,2vw,24px);font-weight:600;color:var(--chalk-y);max-width:24em;line-height:1.45}
 .hero .bell{font-size:clamp(15px,1.6vw,19px);font-weight:600;color:var(--chalk-y);opacity:.92;margin-bottom:8px}
+.hero .live{display:inline-block;align-self:flex-start;margin:-2px 0 10px;padding:3px 12px;border:1.5px dashed rgba(244,242,234,.4);border-radius:999px;font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--chalk)}
+.hero .live[hidden]{display:none}
 .panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,.35)}
 .panel h2{margin:0;font-size:22px;font-weight:700;line-height:1.2}
 .match{display:flex;flex-direction:column;gap:12px;min-width:0}

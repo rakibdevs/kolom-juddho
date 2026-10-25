@@ -100,6 +100,8 @@ const LINES={
   saved:['বাপরে! অল্পের জন্য বাঁচলাম।','কিনারায় ঝুলছে, কিন্তু পড়েনি!'],
   super:['এটা কিন্তু চিটিং! ⚡','ওরে বাবা, সুপার টোকা!'],
 };
+// Live player count: the WebSocket address of the Worker in worker/ (wss://…/live). Empty turns the count off.
+const LIVE_URL='';
 const FONT_UI='"Baloo Da 2", sans-serif', FONT_CHALK='"Atma", "Baloo Da 2", cursive';
 // Today's date as it would be chalked on the board, e.g. ২৪.১০.২০২৬ and শনিবার.
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}
