@@ -1,0 +1,19 @@
+# Files the Cloudflare Worker must not serve: tooling, docs, the Worker's own code and config.
+.git
+.github
+.wrangler
+node_modules
+dist
+worker
+tools
+docs
+*.md
+LICENSE
+wrangler.toml
+.assetsignore
+.gitignore
+.nojekyll
+.DS_Store
+*.tmp.html
+# a large screenshot for the README; the game never loads it
+assets/game-snapshot.png

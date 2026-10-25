@@ -2,3 +2,4 @@
 *.zip
 .wrangler/
 node_modules/
+dist/

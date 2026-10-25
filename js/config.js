@@ -111,8 +111,9 @@ const TEACHER_QUOTES=[
   'কলম রাখো, আমার দিকে তাকাও।','পুরো ক্লাস শাস্তি পাবে।','তোমাদের ব্যাচের মতো ব্যাচ আমি দেখিনি।','চুপ! একদম চুপ!',
   'বেতটা কোথায়? কেউ বেতটা আনো তো।','আগে হাত তোলো, তারপর কথা বলো।','বোর্ডে এসো, অঙ্কটা করে দেখাও।',
 ];
-// Live player count: the WebSocket address of the Worker in worker/ (wss://…/live). Empty turns the count off.
-const LIVE_URL='';
+// Live player count: the WebSocket address of the kolom-juddho Worker (worker/src/index.js). It works from every
+// address the game is served from, as long as that origin is in ALLOWED_ORIGINS in wrangler.toml. Empty = off.
+const LIVE_URL='wss://kolom-juddho.rakib1708.workers.dev/live';
 const FONT_UI='"Noto Sans Bengali", "Noto Sans", sans-serif', FONT_DISPLAY='"Noto Serif Bengali", "Noto Serif", Georgia, serif';
 // Today's date as it would be chalked on the board, e.g. ২৪.১০.২০২৬ and শনিবার.
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}

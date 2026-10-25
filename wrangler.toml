@@ -1,0 +1,32 @@
+# The kolom-juddho Worker (worker/src/index.js): serves the game from this folder and the live player count
+# at /live. Deploy from the repository root with:  npx wrangler deploy
+# Files the site doesn't need are left out by .assetsignore.
+name = "kolom-juddho"
+main = "worker/src/index.js"
+compatibility_date = "2025-06-01"
+
+[assets]
+directory = "."
+binding = "ASSETS"
+# Only these run the Worker (the live count, and the pages whose __SITE_URL__ it fills in); every other file
+# is served straight from the assets, which doesn't count against the Worker's request quota.
+run_worker_first = ["/live", "/", "/index.html", "/sw.js", "/robots.txt", "/sitemap.xml"]
+
+# Gives the Worker this deploy's id and date: sw.js uses the id as its cache version.
+[version_metadata]
+binding = "CF_VERSION_METADATA"
+
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
+# SQLite-backed Durable Objects run on the Workers free plan. The lobby stores nothing.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Lobby"]
+
+[vars]
+# The game's main address: used for canonical links, link previews, the sitemap and challenge links.
+SITE_URL = "https://kolom.themicly.com"
+# Pages allowed to open the live count, comma separated (localhost:8787 is for wrangler dev only).
+ALLOWED_ORIGINS = "https://kolom.themicly.com,https://kolom-juddho.rakib1708.workers.dev,https://rakibdevs.github.io,http://localhost:8787"

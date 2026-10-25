@@ -8,7 +8,7 @@ Instructions for AI coding agents (Claude Code, Codex, Copilot and similar) work
 
 ## Hard rules
 
-- **No build step.** `index.html` loads `css/style.css` and the plain scripts in `js/` in a fixed order. Do not add a bundler, framework, npm or build step unless the maintainer asks for one. The only exception is `worker/`, which is deployed with `npx wrangler` and never loaded by the page.
+- **No build step.** `index.html` loads `css/style.css` and the plain scripts in `js/` in a fixed order. Do not add a bundler, framework, npm or build step unless the maintainer asks for one. The only exceptions are deploy tooling: `npx wrangler` for the Cloudflare Worker and `node tools/build-site.js` for plain hosts. Neither is needed to develop or play.
 - **Classic scripts, not ES modules.** The `js/` files share top-level globals, and the game must still open from `file://`, which modules break. Keep the load order in `index.html` and do not reuse a top-level name in two files.
 - **Do not upgrade three.js casually.** The game uses the global-script build of **three.js r128** from cdnjs (`window.THREE`). Newer versions drop that build and change APIs (for example, `CapsuleGeometry` only exists in r142+). Any upgrade must switch to ES modules and be tested in both views.
 - **Pin every CDN URL to an exact version.** Never use `@latest` or a version range.
@@ -42,7 +42,8 @@ Scripts load in this order, and each one only uses names from earlier files at l
 | `js/input.js` | Pointer events. Pressing on your own pen starts aiming. Dragging elsewhere orbits the camera (3D only). |
 | `assets/`, `tools/og-image.html` | Icons and the link preview image. `tools/og-image.html` redraws `og-image.png` with the game's own code; the command is in its header comment. Regenerate it when the pens or title change. |
 | `manifest.webmanifest`, `robots.txt`, `sitemap.xml` | Install metadata and crawler files |
-| `worker/` | Cloudflare Worker (`src/index.js`, `wrangler.toml`) for the live count: `/live` upgrades to a WebSocket held by the `Lobby` Durable Object (hibernation API), which broadcasts `{online, playing}`. Origins are checked against `ALLOWED_ORIGINS`. It is deployed separately with `npx wrangler deploy` and is not part of the site. |
+| `worker/src/index.js`, `wrangler.toml`, `.assetsignore` | The Cloudflare Worker `kolom-juddho`: serves the site from the repository root (minus `.assetsignore`), fills `__SITE_URL__` (`SITE_URL` var) and `__BUILD_DATE__` (the deploy id for `sw.js`) in the paths listed in `run_worker_first`, and handles `/live`, a WebSocket held by the `Lobby` Durable Object (hibernation API) that broadcasts `{online, playing}` to origins in `ALLOWED_ORIGINS`. Deploy with `npx wrangler deploy` from the root. |
+| `tools/build-site.js` | Builds `dist/` for plain web hosts (Apache/LiteSpeed, e.g. kolom.themicly.com): copies the site, fills the placeholders and writes `.htaccess`. Node built-ins only. |
 | `sw.js` | Service worker for offline play: precaches `CORE` (the page, styles, every script, three.js), then serves same-origin files, cdnjs and Google Fonts stale-while-revalidate. `VERSION` is `__BUILD_DATE__`, filled in by the deploy workflow. Registered from `main.js` only over https, so local servers always show fresh files. |
 | `js/main.js` | Fixed-step physics at 1/480 s, falling animation, render 3D or 2D, then `init` |
 
@@ -62,6 +63,7 @@ Scripts load in this order, and each one only uses names from earlier files at l
 ## Common tasks
 
 - **Add a script.** Add its `<script>` tag to `index.html` in load order and its name to `CORE` in `sw.js`, or offline play will miss it.
+- **Add a site file that needs `__SITE_URL__`.** Add its path to `FILL` in `worker/src/index.js` and to `run_worker_first` in `wrangler.toml`; `tools/build-site.js` and the Pages workflow fill `.html`, `.xml`, `.txt` and `sw.js` already.
 - **Give the computer new lines.** Add to `LINES` in `js/config.js` (keys: `start`, `turn`, `knock`, `oops`, `self`, `lost`, `close`, `saved`, `super`). Keep them short and in the classroom voice; they are shown with `textContent`.
 
 - **Add a pen.** Add an object to `PENS` in `js/config.js` with `id`, `name`, `short` (chip label), `bn`, `brand`, `tag`, its parts (`body`, `cap`, and optional `hex`, `clear` + `ink`, `rubber`, `label` + `labelInk`, `end`, `capLen`, `capMetal`, `capClear`, `capRing`, `clip`, `clipLen`, `trim`, and under a clear cap `nose`, `noseLen`, `noseClear`, `tip`; colours as `#rrggbb`; see the comment above `PENS`), `colors`, `paint`, `m`, `L`, `r`, `speed` and `grip`. Both renderers, the pen cards, the swatches, the credits and the share card pick it up automatically. Keep `speed` at or below about 18, or pens will fly off the table at full power. Size `L` and `r` from the real pen at about 1 unit = 10 cm; 2D drawings widen pens by `PEN_W2D`.

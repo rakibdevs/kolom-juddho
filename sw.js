@@ -4,7 +4,7 @@
 "use strict";
 
 const VERSION='__BUILD_DATE__',CACHE=`kolom-juddho-${VERSION}`;
-const CORE=['./','index.html','css/style.css','manifest.webmanifest','assets/icon.svg','assets/icon-192.png',
+const CORE=['./','css/style.css','manifest.webmanifest','assets/icon.svg','assets/icon-192.png',
   ...['config','physics','cpu','sound','art','scene3d','render2d','flow','tutorial','menu','share','challenge','live','input','main'].map(f=>`js/${f}.js`),
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'];
 // Other hosts whose files are worth keeping offline.
@@ -23,7 +23,7 @@ self.addEventListener('fetch',e=>{
   const own=url.origin===self.location.origin;
   if(!own&&!HOSTS.includes(url.hostname))return;
   e.respondWith(caches.open(CACHE).then(async c=>{
-    const key=req.mode==='navigate'?'index.html':req;
+    const key=req.mode==='navigate'?'./':req; // the page itself, by its folder address: some hosts redirect index.html
     const hit=await c.match(key,{ignoreSearch:req.mode==='navigate'});
     const net=fetch(req).then(r=>{if(r&&(r.ok||r.type==='opaque'))c.put(key,r.clone());return r;}).catch(()=>null);
     if(hit){e.waitUntil(net);return hit;}

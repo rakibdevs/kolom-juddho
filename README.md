@@ -76,18 +76,32 @@ python3 -m http.server 8000
 
 Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` and `/ (root)`. You can delete the `.github` folder if you use this option. With this option, nothing fills in the site address, so replace every `__SITE_URL__` in `index.html`, `robots.txt` and `sitemap.xml` with your live address (no trailing slash), and `__BUILD_DATE__` in `sitemap.xml` with today's date.
 
-## Live player count (optional, Cloudflare)
+## Deploy to Cloudflare (game and live player count)
 
-The chalkboard can show **🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন**. The count comes from a tiny Cloudflare Worker in `worker/`: one Durable Object holds a WebSocket per open game and tells everyone the totals. It stores nothing and receives only whether a tab is in a match. It runs on the Workers free plan.
+One Worker, `kolom-juddho`, serves the game and the live player count. `wrangler.toml` in the repository root configures it, and `worker/src/index.js` is its code:
 
-1. Log in once: `cd worker && npx wrangler login`.
-2. In `worker/wrangler.toml`, list the pages allowed to connect in `ALLOWED_ORIGINS` (your Pages or custom domain).
-3. Deploy: `npx wrangler deploy`. It prints an address like `https://kolom-juddho-live.<you>.workers.dev`.
-4. Put that address, as `wss://kolom-juddho-live.<you>.workers.dev/live`, into `LIVE_URL` in `js/config.js` and deploy the site.
+- **The game files:** served straight from this folder. `.assetsignore` leaves out the docs, tools, the Worker's own code and the large README screenshot.
+- **`__SITE_URL__`:** the page, `sw.js`, `robots.txt` and `sitemap.xml` pass through the Worker, which fills in `__SITE_URL__` with `SITE_URL` (`https://kolom.themicly.com`). It also stamps the deploy into the service worker, so players get every update.
+- **`/live`:** a WebSocket to one Durable Object that counts open games and games in a match. The chalkboard shows **🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন**. It stores nothing and receives only whether a tab is in a match. It runs on the Workers free plan.
 
-With `LIVE_URL` empty the game never connects, and the count hides itself whenever the Worker can't be reached.
+```bash
+npx wrangler login     # once
+npx wrangler deploy    # from the repository root
+```
 
-To try it locally, run `npx wrangler dev --port 8787` in `worker/` and set `LIVE_URL` to `ws://127.0.0.1:8787/live`.
+The game is then at `https://kolom-juddho.rakib1708.workers.dev`. `LIVE_URL` in `js/config.js` points at its `/live`, so the count works on every copy of the game whose address is listed in `ALLOWED_ORIGINS`. Set `LIVE_URL` to `''` to turn the count off.
+
+To try it locally, run `npx wrangler dev --port 8787` and open `http://localhost:8787`.
+
+## Deploy to a plain web host (kolom.themicly.com)
+
+For an Apache or LiteSpeed host such as the one behind `kolom.themicly.com`, build a ready-to-upload copy:
+
+```bash
+node tools/build-site.js https://kolom.themicly.com
+```
+
+Upload everything inside `dist/`, including the hidden `.htaccess`, to the site's document root. The build fills in the site address and the build date, and `.htaccess` makes sure the page and the service worker are never served stale. Rebuild and upload after each change.
 
 **After the first deploy**, add the site to [Google Search Console](https://search.google.com/search-console) and submit `sitemap.xml`. You can check the link preview with the [Facebook sharing debugger](https://developers.facebook.com/tools/debug/).
 
@@ -110,14 +124,16 @@ To try it locally, run `npx wrangler dev --port 8787` in `worker/` and set `LIVE
 │   ├── menu.js                # Home screen
 │   ├── share.js               # Result image
 │   ├── challenge.js           # Challenge links
-│   ├── live.js                # Live player count (connects to worker/)
+│   ├── live.js                # Live player count (connects to the Worker's /live)
 │   ├── input.js               # Pointer input
 │   └── main.js                # Game loop and boot
 ├── assets/                    # Icons and og-image.png (link preview)
 ├── tools/og-image.html        # Redraws og-image.png with the game's code
 ├── manifest.webmanifest       # Install name, colours and icons
 ├── sw.js                      # Service worker for offline play
-├── worker/                    # Cloudflare Worker + Durable Object for the live count
+├── worker/src/index.js        # Cloudflare Worker: serves the game, fills in the site address, live count
+├── wrangler.toml, .assetsignore  # Cloudflare deploy config and the files it must not serve
+├── tools/build-site.js        # Ready-to-upload dist/ for plain web hosts
 ├── robots.txt, sitemap.xml    # For search engines
 ├── .nojekyll                  # Tells Pages to serve files as-is
 ├── .github/workflows/pages.yml
