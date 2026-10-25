@@ -282,6 +282,42 @@ function swayTrees(now){
   });
   pos.needsUpdate=true;
 }
+// Sir, for "স্যার আসছেন!": a painted cut-out of the teacher (white shirt, dark trousers, glasses, the register
+// under his arm and the cane) who walks along the verandah to the door, and his shadow falling into the room.
+// placeSir(z, show, now) moves him; js/flow.js decides when.
+let sirFig=null;
+function sirCanvas(){
+  return mkCanvas(256,600,(g,w,h)=>{
+    const c=(x,y,r,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,y,r,0,7);g.fill();};
+    g.fillStyle='#2b2f3a';g.fillRect(92,330,32,250);g.fillRect(132,330,32,250);            // trousers
+    g.fillStyle='#1a1a1a';g.fillRect(86,570,42,22);g.fillRect(128,570,42,22);              // shoes
+    g.fillStyle='#f3f1ea';g.beginPath();g.moveTo(80,150);g.lineTo(176,150);g.lineTo(182,340);g.lineTo(74,340);g.closePath();g.fill(); // shirt
+    g.fillStyle='#e2ded2';g.fillRect(126,160,4,175);                                        // button line
+    g.fillStyle='#3a2a20';g.fillRect(74,330,108,10);                                        // belt
+    g.fillStyle='#f3f1ea';g.fillRect(58,156,26,120);g.fillRect(172,156,26,120);             // sleeves
+    c(70,290,13,'#c99a72');c(186,290,13,'#c99a72');                                         // hands
+    g.fillStyle='#7a1f22';g.fillRect(36,210,36,92);                                         // the register under his arm
+    g.strokeStyle='#9a6a33';g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(186,290);g.lineTo(232,520);g.stroke(); // cane
+    g.fillStyle='#c99a72';g.fillRect(118,124,20,30);c(128,92,40,'#c99a72');                 // neck and head
+    g.fillStyle='#1f1a17';g.beginPath();g.arc(128,82,41,Math.PI*1.02,Math.PI*1.98);g.fill(); // hair
+    g.fillStyle='#2a2320';g.fillRect(104,104,48,6);                                         // moustache
+    g.strokeStyle='#111';g.lineWidth=3;g.strokeRect(102,82,20,14);g.strokeRect(134,82,20,14);g.beginPath();g.moveTo(122,88);g.lineTo(134,88);g.stroke(); // glasses
+  });
+}
+function buildSir(){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(4.3,10),new THREE.MeshStandardMaterial({map:tex(sirCanvas()),transparent:true,alphaTest:.5,side:THREE.DoubleSide,roughness:.9}));
+  m.rotation.y=Math.PI/2;m.visible=false;scene.add(m); // faces into the classroom (+x)
+  const sh=new THREE.Mesh(new THREE.PlaneGeometry(9,3.4),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0,depthWrite:false}));
+  sh.rotation.x=-Math.PI/2;sh.position.y=.03;sh.visible=false;scene.add(sh);
+  sirFig={m,sh};
+}
+function placeSir(z,show,now){
+  if(!sirFig)return;const {m,sh}=sirFig;
+  m.visible=sh.visible=show;if(!show)return;
+  m.position.set(-33.2,5+Math.abs(Math.sin(now/170))*.18,z);
+  const k=clamp(1-Math.abs(z-5.5)/9,0,1);   // his shadow falls in through the door as he nears it
+  sh.position.set(-25.5,.03,z);sh.material.opacity=.38*k;
+}
 // Field, school building, flag, trees and boundary wall seen through the door and windows.
 function buildOutside(){
   const sky=new THREE.Mesh(new THREE.SphereGeometry(250,32,16),new THREE.MeshBasicMaterial({map:tex(skyCanvas()),side:THREE.BackSide,fog:false,depthWrite:false}));sky.position.set(0,0,20);sky.renderOrder=-1;scene.add(sky);
@@ -460,7 +496,7 @@ function buildScene(){
     if(k%3===0)box(1.5,.3,.5,mat(0xe07aa0),cx+5.6,7.6,z-.6);
   });});
 
-  buildOutside();
+  buildOutside();buildSir();
 
   const fanM=mat(0x6f6a52,{roughness:.6,metalness:.2});
   [[0,2],[0,28],[-14,42],[14,42]].forEach(([x,z])=>{

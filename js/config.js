@@ -100,6 +100,7 @@ const LINES={
   close:['ইশ্‌, আরেকটু হলেই!','অল্পের জন্য বেঁচে গেলি!'],
   saved:['বাপরে! অল্পের জন্য বাঁচলাম।','কিনারায় ঝুলছে, কিন্তু পড়েনি!'],
   super:['এটা কিন্তু চিটিং! ⚡','ওরে বাবা, সুপার টোকা!'],
+  sir:['এই! স্যার আসছে, তাড়াতাড়ি!','পায়ের শব্দ! স্যার!','লুকা লুকা, স্যার আসছে!'],
 };
 // স্যার বলেন: things every teacher in a Bangladeshi classroom seemed to say. Not quotes from real people.
 const TEACHER_QUOTES=[
@@ -117,5 +118,5 @@ const FONT_UI='"Noto Sans Bengali", "Noto Sans", sans-serif', FONT_DISPLAY='"Not
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}
 const weekdayBn=()=>['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][new Date().getDay()];
 
-const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,stats:null,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
+const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,stats:null,sirOn:true,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
 let pens=[],meshes=[],rings=[],muted=false,has3D=true;

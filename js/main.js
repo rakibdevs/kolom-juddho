@@ -25,6 +25,7 @@ function sync3D(now){
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(.05,(now-last)/1000);last=now;
+  if($('#menu').hidden&&$('#endScreen').hidden&&!document.hidden)sirTick(dt,now); // the tiffin clock pauses on menus
   if(G.state==='cpu'&&G.cpuAnim){
     const a=G.cpuAnim,k=(now-a.t0)/750;
     G.aimVis={cx:a.cx,cz:a.cz,ang:a.plan.ang,power:a.plan.power*Math.min(1,k)};

@@ -61,7 +61,14 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .dots i{width:12px;height:12px;border-radius:50%;border:2px solid currentColor;opacity:.45}
 .dots i.on{opacity:1;background:currentColor}
 .pcard.p1 .dots{color:var(--p1)} .pcard.p2 .dots{color:var(--p2)}
-#turn{align-self:center;margin-top:4px;background:var(--hud);border:1px solid var(--hud-line);border-radius:999px;padding:6px 14px;font-weight:700;font-size:var(--fs-md);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+/* turn pill and, under it, the tiffin clock that counts down to Sir's visit */
+.hudmid{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:4px;min-width:0}
+#tiffin{background:var(--hud);border:1px solid var(--hud-line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:var(--fs-sm);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#tiffin[hidden]{display:none}
+#tiffin.warn{background:#c8302b;border-color:#ffb3a8;color:#fff;animation:sirPulse .55s ease-in-out infinite alternate}
+#tiffin.here{background:#2b2f3a;color:#fff}
+@keyframes sirPulse{to{transform:scale(1.08)}}
+#turn{background:var(--hud);border:1px solid var(--hud-line);border-radius:999px;padding:6px 14px;font-weight:700;font-size:var(--fs-md);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #turn .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:1px}
 #hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);background:var(--hud);border:1px solid var(--hud-line);border-radius:var(--r-sm);padding:8px 14px;font-size:var(--fs-md);font-weight:500;max-width:min(560px,calc(100vw - 130px));text-align:center;pointer-events:none;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #tools{position:fixed;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;gap:8px;z-index:6}
@@ -76,6 +83,9 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 #bSuper:disabled{opacity:.45;cursor:not-allowed}
 @keyframes superPulse{50%{transform:scale(1.06)}}
 .spc{margin-left:6px;font-size:var(--fs-2xs);font-weight:700;color:var(--gold);line-height:12px;align-self:center}
+/* Sir's shadow falling across the class from the door as he comes, in both views (k: 0 far, 1 at the door) */
+#sirShadow{position:fixed;left:0;bottom:0;height:92vh;width:40vh;z-index:4;pointer-events:none;opacity:calc(var(--k,0)*.42);transform:translateX(calc((var(--k,0) - 1) * 100%)) skewX(-8deg);transform-origin:bottom left;filter:blur(7px);transition:opacity .3s}
+#sirShadow svg{width:100%;height:100%;fill:#000}
 /* the computer's speech bubble, under its score card */
 #bubble{position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 86px);z-index:6;max-width:min(260px,60vw);background:var(--paper);color:var(--paper-ink);border:2px solid var(--paper-ink);border-radius:var(--r-lg);padding:8px 13px;font-weight:600;font-size:var(--fs-base);line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none;opacity:0;transform:translateY(-6px) scale(.96);transform-origin:top right;transition:opacity .2s,transform .2s}
 #bubble::before{content:"";position:absolute;top:-10px;right:26px;border:9px solid transparent;border-top:0;border-bottom:10px solid var(--paper-ink)}
@@ -154,6 +164,7 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .nm:focus-visible{outline:none;border-bottom:2px solid var(--p1)}
 .side.p2 .nm:focus-visible{border-bottom-color:var(--p2)}
 .side .lab{flex:none;font-size:var(--fs-2xs);font-weight:700;padding:2px 8px;border-radius:999px;background:var(--p2);color:#fff}
+.side.p1 .lab{background:var(--p1)}
 .side .lab:empty{display:none}
 .vsbadge{align-self:center;margin:-10px 0;position:relative;z-index:1;width:54px;height:54px;border-radius:50%;background:var(--board);border:4px solid var(--board-edge);color:var(--chalk-y);font-family:var(--font-display);font-weight:700;font-size:var(--fs-base);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.3);transform:rotate(-8deg)}
 .carousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:6px;margin-top:6px}
@@ -199,9 +210,13 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .chsend:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
 .locknote{margin:0;font-size:var(--fs-sm);font-weight:600;color:var(--ink-soft);line-height:1.5}
 .linkbtn{background:none;border:none;padding:2px 0;font:inherit;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-.opts{display:flex;gap:12px}
-.opts .opt{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
-.opts .opt .seg{flex:0 1 220px}
+/* match settings: a small card, one row per setting with the label left and the switch right */
+.opts{display:flex;flex-direction:column;background:var(--page);border:2px solid var(--line);border-radius:var(--r-md);padding:2px 12px}
+.opts .opt{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:8px 0}
+.opts .opt+.opt{border-top:1px dashed var(--line)}
+.opts .optl{font-size:var(--fs-md);color:var(--ink);white-space:nowrap}
+.opts .opt .seg{flex:0 0 auto;width:auto}
+.opts .opt .seg button{min-width:76px;min-height:36px;padding:6px 14px}
 .opt{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
 .opt[hidden]{display:none}
 .opt .seg{display:flex}
@@ -236,6 +251,8 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .steps li div span{display:block;font-size:var(--fs-sm);color:var(--ink-soft);line-height:1.4}
 .rules{margin:14px 0 0;padding-left:20px;font-size:var(--fs-md);line-height:1.65;color:var(--ink-soft)}
 .credits{font-size:var(--fs-md);line-height:1.6;color:var(--ink-soft)}
+.credits h3{margin:18px 0 4px;font-size:var(--fs-lg);color:var(--ink)}
+.credits h2+h3{margin-top:4px}
 .credits p{margin:6px 0;max-width:70ch}
 .credits ul{margin:6px 0;padding-left:20px}
 .credits b{color:var(--ink)}
@@ -346,7 +363,8 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .pickrow{flex-wrap:wrap}
   .pdots{justify-content:flex-start}
   .swatch{width:30px;height:30px}
-  .opts{gap:10px}
+  .opts{padding:2px 10px}
+  .opts .opt .seg button{min-width:64px;padding:6px 10px}
   .go .primary{font-size:var(--fs-xl);padding:14px 16px}
   .go .ghost{padding:12px;font-size:var(--fs-md)}
   .sheet{padding:0;place-items:end stretch}
@@ -382,8 +400,9 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
 /* the turn pill moves under the score cards when they would touch */
 @media (max-width:420px){
-  #turn{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 78px);transform:translateX(-50%);margin:0}
-  #bubble{top:calc(env(safe-area-inset-top,0px) + 118px);font-size:var(--fs-sm)}
+  .hudmid{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 78px);transform:translateX(-50%);margin:0}
+  #turn{margin:0}
+  #bubble{top:calc(env(safe-area-inset-top,0px) + 154px);font-size:var(--fs-sm)}
 }
 /* phones held sideways: short screens get a one-line board and tighter HUD */
 @media (max-height:500px) and (orientation:landscape){
@@ -414,4 +433,4 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .fb{font-size:var(--fs-md);padding:8px 12px;min-height:42px}
   .sharerow .ghost{padding:8px 12px}
 }
-@media (prefers-reduced-motion:reduce){.fanshade,.sirsays q.in{animation:none}#toast,#bubble{transition:none}#bSuper[aria-pressed="true"]{animation:none}.sheetcard{animation:none}}
+@media (prefers-reduced-motion:reduce){#tiffin.warn,.fanshade,.sirsays q.in{animation:none}#toast,#bubble{transition:none}#bSuper[aria-pressed="true"]{animation:none}.sheetcard{animation:none}}

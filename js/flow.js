@@ -4,7 +4,9 @@
 /* ================= flow ================= */
 const isCPU=i=>G.mode==='cpu'&&i===1;
 // Names typed on the home screen are used; empty ones fall back to তুমি / রাশেদ or প্লেয়ার ১ / ২.
-function who(i){return G.mode==='cpu'?(i===0?(G.names[0]||'তুমি'):`${rival()} (CPU)`):(G.names[i]||(i===0?'প্লেয়ার ১':'প্লেয়ার ২'));}
+// If a challenge comes from someone with the player's own name (say, opening your own link), the player is তুমি.
+const sameAsChallenger=()=>!!(G.challenge&&G.names[0]&&G.names[0].toLowerCase()===G.challenge.from.toLowerCase());
+function who(i){return G.mode==='cpu'?(i===0?(sameAsChallenger()?'তুমি':G.names[0]||'তুমি'):`${rival()} (CPU)`):(G.names[i]||(i===0?'প্লেয়ার ১':'প্লেয়ার ২'));}
 function setView(v){
   if(v==='3d'&&(!has3D||G.glLost))v='2d';
   G.view=v;$('#c').style.display=v==='3d'?'block':'none';c2.style.display=v==='2d'?'block':'none';
@@ -31,9 +33,9 @@ function setupMatch(){
   refreshBoard();
   placePens([penDef(G.p1,G.c1),G.mode==='cpu'?cpuPen():penDef(G.p2,G.c2)]);
   G.score=[0,0];G.starter=0;G.matchLive=true;G.armed=-1;G.supers=[0,0];G.superGot=[false,false];
-  G.stats={shots:[0,0],knocks:0,supers:0}; // shown on the result page
+  G.stats={shots:[0,0],knocks:0,supers:0,sir:0}; // shown on the result page
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
-  resetCam();setView(G.view);newRound();
+  resetCam();setView(G.view);newRound();sirReset();
   if(G.mode==='cpu')setTimeout(()=>toast(`${rival()} আনল ${pens[1].def.name}`,`${pens[1].def.colorBn} রঙের`),350);
   bell(false);live.update();setTimeout(()=>say('start'),2300);
 }
@@ -111,7 +113,7 @@ function endTurn(){
   },2100);
 }
 function matchOver(w){
-  G.state='matchover';G.matchLive=false;G.aimVis=null;G.cpuAnim=null;hideBubble();
+  G.state='matchover';placeSir(-16,false,0);$('#tiffin').hidden=true;$('#sirShadow').style.setProperty('--k',0);G.matchLive=false;G.aimVis=null;G.cpuAnim=null;hideBubble();
   bell(true);live.update();
   const cpuWon=G.mode==='cpu'&&w===1,ch=G.challenge;
   $('#endTitle').textContent=ch?(cpuWon?`${poss(rival())} চ্যালেঞ্জ টিকে গেল!`:'চ্যালেঞ্জ জিতেছ!'):cpuWon?`${rival()} জিতে গেল!`:`${who(w)} চ্যাম্পিয়ন!`;
@@ -137,8 +139,53 @@ function buildResult(w){
   sc.append(el('b',w===0?'won':'',toBn(G.score[0])),el('i',null,'–'),el('b',w===1?'won':'',toBn(G.score[1])));
   board.append(s0,sc,s1);penThumb(c0,pens[0].def);penThumb(c1,pens[1].def);
   const st=G.stats,rounds=G.score[0]+G.score[1],list=$('#endStats');list.textContent='';
-  [`🔁 ${toBn(rounds)} রাউন্ড`,`👆 ${toBn(st.shots[0]+st.shots[1])}টা টোকা`,st.knocks?`💥 ${toBn(st.knocks)} বার ঠাস করে ফেলা`:null,rounds>st.knocks?`😅 ${toBn(rounds-st.knocks)} বার নিজের কলমই পড়ল`:null,st.supers?`⚡ সুপার টোকা ${toBn(st.supers)} বার`:null]
+  [`🔁 ${toBn(rounds)} রাউন্ড`,`👆 ${toBn(st.shots[0]+st.shots[1])}টা টোকা`,st.knocks?`💥 ${toBn(st.knocks)} বার ঠাস করে ফেলা`:null,rounds>st.knocks?`😅 ${toBn(rounds-st.knocks)} বার নিজের কলমই পড়ল`:null,st.supers?`⚡ সুপার টোকা ${toBn(st.supers)} বার`:null,st.sir?`🚶 স্যার এসেছিলেন ${toBn(st.sir)} বার`:null]
     .filter(Boolean).forEach(t=>list.append(el('li',null,t)));
+}
+
+/* ================= স্যার আসছেন! ================= */
+// A tiffin clock runs down while a match is on screen. Near the end Sir's footsteps get louder and he walks to
+// the door; if he arrives mid-round, both pens are confiscated and the round is replayed with no score. Then he
+// leaves and a new tiffin starts. Off when G.sirOn is false.
+const sir={left:0,phase:'calm',t:0,step:0,z:-16,visits:0};
+const SIR_WARN=8;
+function sirReset(){Object.assign(sir,{left:75+Math.random()*60,phase:'calm',t:0,step:0,z:-16});placeSir(-16,false,0);sirClock();}
+function sirClock(){
+  const k=sir.phase==='warn'?1-sir.left/SIR_WARN:sir.phase==='here'?1:sir.phase==='leave'?sir.t/4:0;
+  $('#sirShadow').style.setProperty('--k',G.sirOn&&G.matchLive?k.toFixed(3):0);
+  const el=$('#tiffin');el.hidden=!(G.sirOn&&G.matchLive);if(el.hidden)return;
+  if(sir.phase==='warn'){el.className='warn';el.textContent=`🚶 স্যার আসছেন! ${toBn(Math.ceil(sir.left))}`;}
+  else if(sir.phase==='here'||sir.phase==='leave'){el.className='here';el.textContent='🤫 স্যার ক্লাসে!';}
+  else{const s=Math.max(0,Math.ceil(sir.left-SIR_WARN)),m=Math.floor(s/60);el.className='';el.textContent=`⏰ টিফিন ${toBn(m)}:${toBn(String(s%60).padStart(2,'0'))}`;}
+}
+function sirTick(dt,now){
+  if(!G.sirOn&&!$('#tiffin').hidden){placeSir(-16,false,0);sir.phase='calm';sirClock();} // switched off mid-match: tidy away
+  if(!G.sirOn||!G.matchLive||G.state==='matchover')return;
+  sir.left-=dt;
+  if(sir.phase==='calm'&&sir.left<=SIR_WARN){sir.phase='warn';sir.step=0;say('sir');toast('🚶 পায়ের শব্দ!','স্যার আসছেন, তাড়াতাড়ি শেষ করো');}
+  if(sir.phase==='warn'){
+    const k=1-sir.left/SIR_WARN;sir.z=-16+21.5*k;placeSir(sir.z,true,now);
+    sir.step-=dt;if(sir.step<=0){sir.step=.55-.15*k;footstep(.12+.5*k);if(k>.5)buzz(15);}
+    if(sir.left<=0)sirArrives();
+  } else if(sir.phase==='here'){
+    sir.t-=dt;placeSir(5.5,true,0);if(sir.t<=0){sir.phase='leave';sir.t=4;}
+  } else if(sir.phase==='leave'){
+    sir.t-=dt;sir.z=5.5-21.5*(1-sir.t/4);placeSir(sir.z,true,now);
+    sir.step-=dt;if(sir.step<=0){sir.step=.6;footstep(.1*sir.t/4);}
+    if(sir.t<=0)sirReset();
+  }
+  sirClock();
+}
+function sirArrives(){
+  sir.phase='here';sir.t=3.5;sir.visits++;G.stats.sir=(G.stats.sir||0)+1;
+  snap(.9,900,.15,300);setTimeout(()=>snap(.6,1100,.1),130);buzz([60,40,60]); // the cane cracks on the table
+  if(G.state==='aim'||G.state==='cpu'||G.state==='moving'){
+    // mid-round: both pens confiscated, nobody scores, the round is played again
+    G.state='roundover';G.cpuAnim=null;G.aimVis=null;G.armed=-1;tutor.hide();hideBubble();
+    pens.forEach(clearBoost);
+    toast('🚶 স্যার এসে গেছেন!','দুজনেরই কলম বাজেয়াপ্ত! রাউন্ড আবার হবে');setHint('');
+    setTimeout(()=>{if(G.state==='roundover'&&G.matchLive)newRound();},3200);
+  } else toast('🚶 স্যার এসে গেছেন!','বেঁচে গেলে! কলম আগেই সরানো হয়েছিল');
 }
 
 /* ================= HUD ================= */

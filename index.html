@@ -79,9 +79,10 @@
 
 <div id="hud" hidden>
   <div class="pcard p1" id="card0"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
-  <div id="turn"></div>
+  <div class="hudmid"><div id="turn"></div><div id="tiffin" hidden aria-live="polite"></div></div>
   <div class="pcard p2" id="card1"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
 </div>
+<div id="sirShadow" aria-hidden="true"><svg viewBox="0 0 100 260" preserveAspectRatio="xMinYMax meet"><path d="M50 8c12 0 20 9 20 21s-8 22-20 22-20-10-20-22S38 8 50 8zM26 58h48c8 0 13 6 14 14l6 70c1 7-4 12-10 12h-4l-2 98H64l-6-86h-16l-6 86H22l-2-98h-4c-6 0-11-5-10-12l6-70c1-8 6-14 14-14zM92 150l30 100h-6L86 152z"/></svg></div>
 <div id="hint" hidden></div>
 <div id="bubble" hidden aria-live="polite"></div>
 <div id="tutor" hidden aria-hidden="true"><span class="hand">👆</span></div>
@@ -146,7 +147,9 @@
         </div>
         <p class="locknote" id="lockNote" hidden>🔒 ম্যাচ চলছে, তাই কলম আর মোড বদলানো যাবে না। <button class="linkbtn" id="bEndMatch">ম্যাচ ছেড়ে নতুন করে সাজাও</button></p>
         <div class="opts">
-          <div class="opt"><span class="optl">কীভাবে দেখবে?</span>
+          <div class="opt"><span class="optl">🚶 স্যার আসবেন?</span>
+            <div class="seg" id="segSir" role="group" aria-label="খেলার মাঝে স্যার আসবেন কি না"><button data-v="on">হ্যাঁ</button><button data-v="off">না</button></div></div>
+          <div class="opt"><span class="optl">👀 কীভাবে দেখবে?</span>
             <div class="seg" id="segView" role="group" aria-label="কীভাবে দেখবে"><button data-v="3d">🏫 3D</button><button data-v="2d">🔲 2D</button></div></div>
         </div>
         <div class="go">
@@ -181,7 +184,8 @@
             <li>নিজের কলম পড়ে গেলে রাউন্ড হার। আগে ৩ রাউন্ড জিতলেই চ্যাম্পিয়ন।</li>
             <li>🖊️ যার যেটা পছন্দ সেই কলম নাও; কম্পিউটার নিজের মতো একটা কলম নিয়ে আসবে। ম্যাচ শুরু হলে কলম আর বদলানো যায় না।</li>
             <li>⚡ একটা রাউন্ড জিতলেই সুপার টোকা, ম্যাচে একবার: কলম ভারী হয়ে ছোটে, ধাক্কা দিয়েই থেমে যায়। না লাগলে কিন্তু নিজের কলমও গড়িয়ে পড়তে পারে!</li>
-            <li>3D-তে ফাঁকা জায়গায় টেনে ক্লাসরুম ঘোরাও, স্ক্রল বা পিঞ্চ করে জুম করো। খেলার মাঝেও 2D/3D বদলানো যায়।</li>
+            <li>🚶 টিফিনের ঘড়ি শেষ হলেই স্যার আসেন! পায়ের শব্দ শুনলে তাড়াতাড়ি রাউন্ড শেষ করো, নইলে দুজনেরই কলম বাজেয়াপ্ত।</li>
+        <li>3D-তে ফাঁকা জায়গায় টেনে ক্লাসরুম ঘোরাও, স্ক্রল বা পিঞ্চ করে জুম করো। খেলার মাঝেও 2D/3D বদলানো যায়।</li>
           </ul>
         </section>
         <section data-tab="memories">
@@ -195,9 +199,15 @@
         </section>
         <section data-tab="credits" class="credits">
           <h2>কৃতজ্ঞতা</h2>
-          <p>কলমগুলোর নাম, চেহারা আর রং আসল কলমের স্মৃতি থেকে আঁকা। নাম ও ডিজাইনের সব কৃতিত্ব তাদের নির্মাতাদের:</p>
+          <h3>কলমগুলো</h3>
+          <p>প্রতিটা কলম কোড দিয়ে আঁকা, পণ্যের ছবি আর ছোটবেলার স্মৃতি মিলিয়ে। কোনো লোগো ব্যবহার করা হয়নি। নাম আর নকশার সব কৃতিত্ব নির্মাতাদের:</p>
           <ul id="penCredits"></ul>
-          <p>এটা ছোটবেলার স্মৃতি নিয়ে ভক্তদের বানানো একটা খেলা। কোনো কলম কোম্পানির সাথে এর সম্পর্ক নেই, তাদের অনুমোদনও নেই। সব ট্রেডমার্ক তাদের নিজ নিজ মালিকের।</p>
+          <p>এটা ছোটবেলার স্মৃতি নিয়ে ভক্তদের বানানো একটা খেলা। কোনো কলম কোম্পানির সাথে এর সম্পর্ক নেই, তাদের অনুমোদনও নেই। সব ট্রেডমার্ক যার যার মালিকের।</p>
+          <h3>খেলার ভেতরের কথা</h3>
+          <p>স্যারদের কথাগুলো, রাশেদের খোঁচা আর ক্লাসের বন্ধুদের নাম বানানো; কোনো আসল মানুষের উক্তি নয়।</p>
+          <p>তোমার নাম, পছন্দের কলম আর সেটিংস শুধু এই ডিভাইসেই থাকে, কোথাও পাঠানো হয় না।</p>
+          <p id="liveNote" hidden>“এখন অনলাইন” গোনা হয় নাম-পরিচয় ছাড়া: শুধু কয়টা গেম খোলা আর কয়টায় খেলা চলছে। কিছুই জমা রাখা হয় না।</p>
+          <h3>কোড ও সহায়তা</h3>
           <div class="ghrow">
             <a class="gh" href="https://github.com/rakibdevs/kolom-juddho" target="_blank" rel="noopener">
               <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -205,8 +215,7 @@
             </a>
             <span class="ghnote">খেলাটা ভালো লাগলে স্টার দিয়ে পাশে থাকো। কোড খোলা, চাইলে নতুন কলম বা ফিচারও যোগ করতে পারো।</span>
           </div>
-          <p class="tech">“এখন অনলাইন” গোনা হয় নাম-পরিচয় ছাড়া: শুধু কয়টা গেম খোলা আর কয়টায় খেলা চলছে। কিছুই জমা রাখা হয় না।</p>
-          <p class="tech">3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> · ফন্ট: Noto Sans Bengali, Noto Serif Bengali (Google Fonts)</p>
+          <p class="tech">3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> · ফন্ট: Noto Sans Bengali ও Noto Serif Bengali (Google Fonts) · কোড MIT লাইসেন্সে খোলা</p>
         </section>
       </div>
     </div>

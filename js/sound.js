@@ -32,5 +32,15 @@ function bell(long){
   }
 }
 
+// Sir's footsteps on the verandah: a low thud with a scuff, louder as he comes.
+function footstep(v){
+  if(muted||!actx)return;
+  const t=actx.currentTime,src=actx.createBufferSource();src.buffer=noiseBuf;
+  const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=220;
+  const g=actx.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  src.connect(f);f.connect(g);g.connect(actx.destination);src.start(t);src.stop(t+.2);
+  const o=actx.createOscillator(),og=actx.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(45,t+.1);
+  og.gain.setValueAtTime(v*.8,t);og.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(og);og.connect(actx.destination);o.start(t);o.stop(t+.14);
+}
 // Haptics on phones that support them; silent when sound is off.
 function buzz(p){if(!muted&&navigator.vibrate)try{navigator.vibrate(p);}catch(e){}}

@@ -58,14 +58,16 @@ function loadSetup(){
     if(['cpu','2p'].includes(s.mode))G.mode=s.mode;
     if(['easy','medium','hard'].includes(s.diff))G.diff=s.diff;
     if(s.view==='2d'||(s.view==='3d'&&has3D))G.view=s.view;
+    if(typeof s.sir==='boolean')G.sirOn=s.sir;
     SIDES.forEach(([k,ck])=>{if(byId(s[k])){G[k]=s[k];G[ck]=penDef(s[k],s[ck]).color;}});
   }catch(e){}
 }
-function saveSetup(){try{localStorage.setItem(SETUP_KEY,JSON.stringify({mode:G.mode,diff:G.diff,view:G.view,p1:G.p1,p2:G.p2,c1:G.c1,c2:G.c2}));}catch(e){}}
+function saveSetup(){try{localStorage.setItem(SETUP_KEY,JSON.stringify({mode:G.mode,diff:G.diff,view:G.view,sir:G.sirOn,p1:G.p1,p2:G.p2,c1:G.c1,c2:G.c2}));}catch(e){}}
 // Brand credits come from PENS, so a new pen gets credited automatically.
 function buildCredits(){
   const brands={};PENS.forEach(p=>(brands[p.brand]=brands[p.brand]||[]).push(p.name));
   $('#penCredits').innerHTML=Object.entries(brands).map(([b,n])=>`<li><b>${b}</b>: ${n.join(', ')}</li>`).join('');
+  $('#liveNote').hidden=!LIVE_URL; // only mention the live count when it is switched on
 }
 // Backdrops, drawn at the screen's size: the classroom wall behind the home screen (its clock is redrawn each
 // minute) and Sir's table behind the result page (#endbg). The CSS .tableshade dims them.
@@ -103,9 +105,9 @@ function saveNames(){try{localStorage.setItem(NAME_KEY,JSON.stringify({p:G.names
 // Labels that carry the rival's name or depend on the mode.
 function pickLabels(){
   const cpu=G.mode==='cpu',r=rival();
-  $('#lab1').textContent='';$('#lab2').textContent=cpu?'CPU':'';
+  $('#lab1').textContent=sameAsChallenger()?'তুমি':'';$('#lab2').textContent=cpu?'CPU':''; // tell two same names apart
   $('#modeCpu').textContent=`🧑‍🎓 ${poss(r)} সাথে`;
-  $('#diffLabel').textContent=G.challenge?`${r} খেলবে এই লেভেলে`:`${r} কতটা পাকা?`;$('#segDiff').setAttribute('aria-label',`${r} কতটা পাকা`);
+  $('#diffLabel').textContent=G.challenge?`চ্যালেঞ্জে ${r} এই লেভেলেই খেলবে · বদলাতে চ্যালেঞ্জ বাদ দাও`:`${r} কতটা পাকা?`;$('#segDiff').setAttribute('aria-label',`${r} কতটা পাকা`);
   $('#challenge').textContent=G.challenge?`${r} তোমাকে চ্যালেঞ্জ পাঠিয়েছে! টিফিন শেষের আগেই জবাব দাও।`:cpu?`${r} তোমাকে চ্যালেঞ্জ করেছে! টিফিন শেষ হওয়ার আগেই জবাব দাও।`:'দুই বন্ধু, এক টেবিল। স্যার আসার আগেই ফয়সালা।';
 }
 function syncNameInputs(){
@@ -124,7 +126,7 @@ function syncSeg(id,val){document.querySelectorAll(id+' button').forEach(b=>b.se
 function refreshMenu(){
   const bd=$('#boardDate'),wd=document.createElement('span');wd.className='wd';wd.textContent=`, ${weekdayBn()}`; // the weekday hides on phones
   bd.textContent=`তারিখ: ${todayBn()}`;bd.append(wd);
-  syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);
+  syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);syncSeg('#segSir',G.sirOn?'on':'off');
   const cpu=G.mode==='cpu';
   $('#diffGroup').hidden=!cpu;$('#vs').classList.toggle('twop',!cpu);
   syncNameInputs();pickLabels();buildSide(0);buildSide(1);
@@ -162,10 +164,13 @@ function openSheet(tab){
   $('#sheet').hidden=false;$('.sheetbody').scrollTop=0;$('#sheet .close').focus();
 }
 function closeSheet(){$('#sheet').hidden=true;if(sheetFrom)sheetFrom.focus({preventScroll:true});}
-function openMenu(){G.prevState=G.state;G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;}
+function openMenu(){G.prevState=G.state;if(sir.phase==='warn'){sir.phase='calm';sir.left=SIR_WARN+12;placeSir(-16,false,0);} // a fresh warning after the pause
+  G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;}
 function wireMenu(){
   const seg=(id,key,after)=>{$(id).onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;G[key]=b.dataset.v;if(after)after();refreshMenu();};};
-  seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;}); // two players can't answer a challengeseg('#segDiff','diff');seg('#segView','view');
+  seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;}); // two players can't answer a challenge
+  seg('#segDiff','diff');seg('#segView','view');
+  $('#segSir').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.sirOn=b.dataset.v==='on';refreshMenu();};
   if(!has3D){const b=document.querySelector('#segView [data-v="3d"]');b.disabled=true;b.textContent='🏫 3D চলবে না';b.title='এই ডিভাইসে 3D চালু করা যায়নি';}
   buildCredits();loadSetup();readChallenge();wireNames();
   $('#sirSays').onclick=()=>sirSays.next();loadStars();
@@ -184,7 +189,7 @@ function wireMenu(){
     if(G.matchLive){if(G.prevState==='moving'||G.prevState==='roundover')G.state=G.prevState;else startTurn();}
   };
   $('#bRematch').onclick=()=>{$('#endScreen').hidden=true;setupMatch();};
-  $('#bChange').onclick=()=>{$('#endScreen').hidden=true;openMenu();};
+  $('#bChange').onclick=()=>{$('#endScreen').hidden=true;if(G.challenge){G.challenge=null;refreshBoard();}openMenu();}; // home ends a challenge; আবার খেলো replays it
   $('#bMenu').onclick=openMenu;
   $('#bSuper').onclick=toggleSuper;
   $('#bView').onclick=()=>setView(G.view==='3d'?'2d':'3d');

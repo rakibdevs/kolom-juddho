@@ -12,12 +12,11 @@ It must stay one-thumb playable on a cheap phone, Bangla first, offline after th
 
 | # | Area | Gap | Why it matters |
 |---|---|---|---|
-| 1 | Time and tension | The game promises “স্যার আসার আগেই” but has no clock and no Sir. | The core memory, playing under the threat of the teacher, is missing. |
-| 2 | People | The classroom is empty. তুহিন and মিতু are on the board but you can't play them. | Pen fights were social: friends watched, cheered and argued. |
-| 3 | Progress | No wins, streaks or trophies are kept. | Without something to come back for, one match is the whole game. |
-| 4 | Pens | Linc and Cello are drawn from catalogue descriptions, not photos. No customising. | Kids bragged about pens: the new Matador, the chewed cap, the sticker. The pen has to look right. |
-| 5 | Rules | Only "knock it off". | Real classrooms had local rules, such as landing on top of the other pen. |
-| 6 | Tech | No automated checks in CI. `assets/game-snapshot.png` (3.8 MB) is deployed but unused. `assets/og-image` still uses the old fonts and English tagline. | Reliability, page weight and a consistent link preview. |
+| 1 | People | The classroom is empty. তুহিন and মিতু are on the board but you can't play them. | Pen fights were social: friends watched, cheered and argued. |
+| 2 | Progress | No wins, streaks or trophies are kept. | Without something to come back for, one match is the whole game. |
+| 3 | Pens | Linc and Cello are drawn from catalogue descriptions, not photos. No customising. | Kids bragged about pens: the new Matador, the chewed cap, the sticker. The pen has to look right. |
+| 4 | Rules | Only "knock it off". | Real classrooms had local rules, such as landing on top of the other pen. |
+| 5 | Tech | No automated checks in CI. `assets/game-snapshot.png` (3.8 MB) is deployed but unused. `assets/og-image` still uses the old fonts and English tagline. | Reliability, page weight and a consistent link preview. |
 
 ## Design principles
 
@@ -36,7 +35,6 @@ Effort sizes: **S** is a day or less, **M** is two to four days, **L** is a week
 
 | # | Feature | Design | Implementation | Effort |
 |---|---|---|---|---|
-| 2.1 | “স্যার আসছেন!” | A wall clock in the HUD counts down a three-minute tiffin. Late in the match: footsteps get louder, a shadow appears at the door, and a whisper toast says "স্যার আসছে!". Players get about five seconds. If Sir arrives mid-round, **both players lose the round** ("দুজনেরই কলম বাজেয়াপ্ত!"). It's a toggle (on by default) so pure play stays possible. | Timer state in `G` and `js/flow.js`. Footsteps made in `js/sound.js`. In 3D, a simple teacher silhouette in the doorway (`buildOutside` already frames the door). In 2D, a banner. | M |
 | 2.2 | Classmate ladder | Play through the names on the board: রাশেদ, তুহিন, মিতু, then the class captain. Each has a style (power hitter, spinner, careful) and their own lines, and every one can be renamed. Their pens stay random. Beating one opens the next. | A `RIVALS` table in `js/config.js` with `cfg {n, noise, pn}`, preferences and `lines`. `planShot` reads the rival's config. A ladder card on the home screen. | M |
 | 2.3 | Crowd round the table | Low-poly classmates in white shirts and navy uniforms stand round the dais and bob and cheer on hits. In 2D: heads at the table edge. | `THREE.InstancedMesh` for bodies and heads so draw calls stay flat (about 217 today). Animation in `sync3D`. | L |
 | 2.4 | আমার খাতা (my notebook) | An exercise-book page, opened from the home screen's top bar, with wins, best streak and trophies: 3–0 clean sweep, one-flick knock-off, ⚡ winner, beat ওস্তাদ. | A small `js/store.js` (namespaced, versioned keys, try/catch), also used by setup and names. Trophy checks in `endTurn` and `matchOver`. A new tab in the home screen's sheet. | M |
@@ -72,5 +70,5 @@ Effort sizes: **S** is a day or less, **M** is two to four days, **L** is a week
 
 ## Suggested order
 
-1. Phase 2: 2.1 Sir arrives → 2.4 my notebook → 2.2 classmate ladder → 2.3 crowd.
+1. Phase 2: 2.4 my notebook → 2.2 classmate ladder → 2.3 crowd.
 2. Phase 3: 3.1 pens from photos → 3.2 customising → 3.3 rule variants.
