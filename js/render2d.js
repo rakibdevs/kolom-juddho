@@ -85,7 +85,7 @@ function drawPen2D(g,p){
 }
 function draw2D(now,W,H,shot){
   layout2D(W,H,shot);const g=g2,{s,dpr}=T2;
-  if(!floorPat){floorPat=pat(ART.floor,.012);woodPat=pat(ART.tableWood,.03);chairPat=pat(ART.darkWood,.03);}
+  if(!floorPat){floorPat=pat(ART.floor,.012);woodPat=pat(ART.tableWood,.02);chairPat=pat(ART.darkWood,.03);}
   // floor
   setWorld(g);g.fillStyle=floorPat||'#8f8c84';g.fillRect(-40,-40,80,80);
   // dais

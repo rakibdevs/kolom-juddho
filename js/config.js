@@ -86,7 +86,8 @@ function penDef(id,color){const b=byId(id),c=b.colors.find(k=>k[0]===color)||b.c
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const $=s=>document.querySelector(s);
 const toBn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
-// Canvas fonts. Keep in step with --font-ui and --font-chalk in css/style.css and the Google Fonts link.
+// Fonts: Noto Sans Bengali for the interface, Noto Serif Bengali (textbook print) for headings, the chalkboard
+// and the 3D blackboard. Keep in step with --font-ui and --font-display in css/style.css and the Google Fonts link.
 // What the computer says in a speech bubble, by event (see say() in js/flow.js). One line is picked at
 // random; at most one line per turn. Lines are spoken by whatever the player renamed him to.
 const LINES={
@@ -100,12 +101,21 @@ const LINES={
   saved:['বাপরে! অল্পের জন্য বাঁচলাম।','কিনারায় ঝুলছে, কিন্তু পড়েনি!'],
   super:['এটা কিন্তু চিটিং! ⚡','ওরে বাবা, সুপার টোকা!'],
 };
+// স্যার বলেন: things every teacher in a Bangladeshi classroom seemed to say. Not quotes from real people.
+const TEACHER_QUOTES=[
+  'এই, পেছনের বেঞ্চ! ওখানে কী হচ্ছে?','কান ধরে দাঁড়াও!','ক্লাসটা কি মাছের বাজার পেয়েছ?','আমি কি দেয়ালের সাথে কথা বলছি?',
+  'ঘণ্টা আমার জন্য পড়ে, তোমাদের জন্য না।','এটা পরীক্ষায় আসবে, দাগিয়ে রাখো।','বাড়ির কাজ কোথায়? খাতা আনোনি কেন?',
+  'হাসছ কেন? আমি কি কৌতুক বলছি?','কাল অভিভাবক নিয়ে আসবে।','জানালা দিয়ে কী দেখছ? বাইরে কি সার্কাস হচ্ছে?',
+  'এক কথা কয়বার বলব?','ক্যাপ্টেন, যারা কথা বলছে তাদের নাম লেখো।','পড়া না পারলে বেঞ্চের ওপর দাঁড়াবে।',
+  'কলম রাখো, আমার দিকে তাকাও।','পুরো ক্লাস শাস্তি পাবে।','তোমাদের ব্যাচের মতো ব্যাচ আমি দেখিনি।','চুপ! একদম চুপ!',
+  'বেতটা কোথায়? কেউ বেতটা আনো তো।','আগে হাত তোলো, তারপর কথা বলো।','বোর্ডে এসো, অঙ্কটা করে দেখাও।',
+];
 // Live player count: the WebSocket address of the Worker in worker/ (wss://…/live). Empty turns the count off.
 const LIVE_URL='';
-const FONT_UI='"Baloo Da 2", sans-serif', FONT_CHALK='"Atma", "Baloo Da 2", cursive';
+const FONT_UI='"Noto Sans Bengali", "Noto Sans", sans-serif', FONT_DISPLAY='"Noto Serif Bengali", "Noto Serif", Georgia, serif';
 // Today's date as it would be chalked on the board, e.g. ২৪.১০.২০২৬ and শনিবার.
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}
 const weekdayBn=()=>['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][new Date().getDay()];
 
-const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
+const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,stats:null,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
 let pens=[],meshes=[],rings=[],muted=false,has3D=true;

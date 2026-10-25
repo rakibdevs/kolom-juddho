@@ -67,13 +67,28 @@ function buildCredits(){
   const brands={};PENS.forEach(p=>(brands[p.brand]=brands[p.brand]||[]).push(p.name));
   $('#penCredits').innerHTML=Object.entries(brands).map(([b,n])=>`<li><b>${b}</b>: ${n.join(', ')}</li>`).join('');
 }
-// Sir's table behind the home screen. The CSS .tableshade dims it.
-function drawTableBg(){
-  const cv=$('#tablebg'),dpr=Math.min(window.devicePixelRatio||1,1.5),W=innerWidth,H=innerHeight;
-  const cw=Math.round(W*dpr),ch=Math.round(H*dpr);if(cv.width===cw&&cv.height===ch)return;
-  cv.width=cw;cv.height=ch;
-  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);drawTableTop(g,W,H);
+// Backdrops, drawn at the screen's size: the classroom wall behind the home screen (its clock is redrawn each
+// minute) and Sir's table behind the result page (#endbg). The CSS .tableshade dims them.
+function drawTableBg(cv){
+  const home=!cv;cv=cv||$('#tablebg');
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),W=innerWidth,H=innerHeight,cw=Math.round(W*dpr),ch=Math.round(H*dpr);
+  const key=home?new Date().getMinutes():0;
+  if(cv.width===cw&&cv.height===ch&&cv.dataset.key===String(key))return;
+  cv.width=cw;cv.height=ch;cv.dataset.key=key;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);(home?drawClassWall:drawTableTop)(g,W,H);
 }
+// স্যার বলেন: a teacher's line on the chalkboard, a new one every few seconds while the home screen shows,
+// or on a tap. The lines are in TEACHER_QUOTES (js/config.js), shuffled once per visit.
+const sirSays=(()=>{
+  let order=[],k=0,timer=0;
+  function next(){
+    if(!order.length)order=TEACHER_QUOTES.map((_,i)=>i).sort(()=>Math.random()-.5);
+    const q=$('#sirQuote');q.classList.remove('in');void q.offsetWidth;
+    q.textContent=TEACHER_QUOTES[order[k++%order.length]];q.classList.add('in');
+  }
+  function start(){clearInterval(timer);next();timer=setInterval(()=>{if($('#menu').hidden){clearInterval(timer);return;}next();drawTableBg();},7000);}
+  return {next,start};
+})();
 // Names, remembered on this device: two players' names, plus the rival's (Rashed by default) for
 // matches against the computer. Shown only through textContent, canvas text and the board.
 const NAME_KEY='kolom-juddho:names';
@@ -107,7 +122,8 @@ function wireNames(){
 }
 function syncSeg(id,val){document.querySelectorAll(id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===val));}
 function refreshMenu(){
-  $('#boardDate').textContent=`তারিখ: ${todayBn()}, ${weekdayBn()}`;
+  const bd=$('#boardDate'),wd=document.createElement('span');wd.className='wd';wd.textContent=`, ${weekdayBn()}`; // the weekday hides on phones
+  bd.textContent=`তারিখ: ${todayBn()}`;bd.append(wd);
   syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);
   const cpu=G.mode==='cpu';
   $('#diffGroup').hidden=!cpu;$('#vs').classList.toggle('twop',!cpu);
@@ -116,7 +132,25 @@ function refreshMenu(){
   $('#bResume').hidden=!G.matchLive;
   $('#bStart').textContent=G.matchLive?'▶ নতুন খেলা':G.challenge?'▶ চ্যালেঞ্জ নাও':'▶ খেলা শুরু করো';
   syncChallengeBanner();document.querySelectorAll('#segDiff button').forEach(b=>b.disabled=!!G.challenge);
-  saveSetup();
+  saveSetup();fitHome();
+}
+// On wide screens the home screen fits the window: the CSS tightens it on short screens, and if it is still
+// too tall it is zoomed out, but never below 80% so the text stays readable. Phones scroll instead.
+function fitHome(){
+  const h=$('.home');h.style.zoom='';
+  if(innerWidth<900||$('#menu').hidden)return;
+  const z=innerHeight/h.scrollHeight;
+  if(z<1)h.style.zoom=Math.max(.8,z).toFixed(3);
+}
+// The live star count on the chalkboard's GitHub button: fetched once per session, hidden while zero or if it fails.
+function loadStars(){
+  const show=n=>{const b=$('#ghCount');b.textContent=toBn(n);b.hidden=!(n>0);}; // no count until there is one
+  try{const c=sessionStorage.getItem('kolom-juddho:stars');if(c!==null)return show(+c);}catch(e){}
+  if(!navigator.onLine)return;
+  fetch('https://api.github.com/repos/rakibdevs/kolom-juddho').then(r=>r.ok?r.json():null).then(j=>{
+    if(!j||!Number.isInteger(j.stargazers_count))return;
+    show(j.stargazers_count);try{sessionStorage.setItem('kolom-juddho:stars',j.stargazers_count);}catch(e){}
+  }).catch(()=>{});
 }
 // Rules, memories and credits live in one sheet with tabs, opened from the top bar.
 let sheetFrom=null;
@@ -128,13 +162,15 @@ function openSheet(tab){
   $('#sheet').hidden=false;$('.sheetbody').scrollTop=0;$('#sheet .close').focus();
 }
 function closeSheet(){$('#sheet').hidden=true;if(sheetFrom)sheetFrom.focus({preventScroll:true});}
-function openMenu(){G.prevState=G.state;G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();$('#menu').scrollTop=0;}
+function openMenu(){G.prevState=G.state;G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;}
 function wireMenu(){
   const seg=(id,key,after)=>{$(id).onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;G[key]=b.dataset.v;if(after)after();refreshMenu();};};
   seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;}); // two players can't answer a challengeseg('#segDiff','diff');seg('#segView','view');
   if(!has3D){const b=document.querySelector('#segView [data-v="3d"]');b.disabled=true;b.textContent='🏫 3D চলবে না';b.title='এই ডিভাইসে 3D চালু করা যায়নি';}
   buildCredits();loadSetup();readChallenge();wireNames();
+  $('#sirSays').onclick=()=>sirSays.next();loadStars();
   $('#bDropCh').onclick=dropChallenge;$('#bChallenge').onclick=sendChallenge;
+  $('#chName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sendChallenge();}};
   document.querySelectorAll('.toplinks button').forEach(b=>b.onclick=()=>openSheet(b.dataset.sheet));
   $('#segSheet').onclick=e=>{const b=e.target.closest('button');if(b)openSheet(b.dataset.v);};
   document.querySelectorAll('#sheet [data-close]').forEach(b=>b.onclick=closeSheet);

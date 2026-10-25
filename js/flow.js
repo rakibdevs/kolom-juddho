@@ -31,6 +31,7 @@ function setupMatch(){
   refreshBoard();
   placePens([penDef(G.p1,G.c1),G.mode==='cpu'?cpuPen():penDef(G.p2,G.c2)]);
   G.score=[0,0];G.starter=0;G.matchLive=true;G.armed=-1;G.supers=[0,0];G.superGot=[false,false];
+  G.stats={shots:[0,0],knocks:0,supers:0}; // shown on the result page
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
   resetCam();setView(G.view);newRound();
   if(G.mode==='cpu')setTimeout(()=>toast(`${rival()} আনল ${pens[1].def.name}`,`${pens[1].def.colorBn} রঙের`),350);
@@ -73,10 +74,10 @@ function toggleSuper(){
 function doShot(i,s,dx,dz,power){
   const sup=G.armed===i&&G.supers[i]>0; // only the armed human player's flick is boosted
   if(sup){
-    const p=pens[i];G.supers[i]--;G.armed=-1;
+    const p=pens[i];G.supers[i]--;G.armed=-1;G.stats.supers++;
     p.boost={m:p.m,I:p.I,g:p.grip,keep:SUPER.keep,grip:SUPER.grip,hit:false};p.m*=SUPER.mass;p.I*=SUPER.mass;power*=SUPER.speed;
   }
-  ensureAudio();applyShot(pens[i],s,dx,dz,power);buzz(12);
+  ensureAudio();applyShot(pens[i],s,dx,dz,power);buzz(12);G.stats.shots[i]++;
   if(!isCPU(i))tutor.done();
   G.state='moving';G.restT=0;acc=0;G.aimVis=null;
   snap(.55+power*.35,2600,.05,1500);
@@ -99,6 +100,7 @@ function endTurn(){
   }
   if(G.mode==='cpu')say(w===1?(sh===1?'knock':'oops'):(sh===1?'self':'lost'));
   G.score[w]++;G.state='roundover';updateHUD();
+  if(w===sh)G.stats.knocks++;
   const done=G.score[w]>=TARGET,earn=!done&&!isCPU(w)&&!G.superGot[w]; // the first round won earns ⚡
   if(earn){G.superGot[w]=true;G.supers[w]=SUPER_USES;updateHUD();}
   toast(`${who(w)} রাউন্ড জিতেছে`,sub);setHint(done?'':'পরের রাউন্ড আসছে…');
@@ -113,12 +115,30 @@ function matchOver(w){
   bell(true);live.update();
   const cpuWon=G.mode==='cpu'&&w===1,ch=G.challenge;
   $('#endTitle').textContent=ch?(cpuWon?`${poss(rival())} চ্যালেঞ্জ টিকে গেল!`:'চ্যালেঞ্জ জিতেছ!'):cpuWon?`${rival()} জিতে গেল!`:`${who(w)} চ্যাম্পিয়ন!`;
-  $('#endScore').textContent=`স্কোর ${toBn(G.score[0])} – ${toBn(G.score[1])}`;
   $('#endText').textContent=ch?(cpuWon?`${rival()} এবার জিতে গেল। আবার চেষ্টা করো, নয়তো পাল্টা চ্যালেঞ্জ পাঠাও।`:`${rival()}কে হারিয়ে দিয়েছ! এবার পাল্টা চ্যালেঞ্জ পাঠাও।`)
     :cpuWon?`${rival()} হাসছে। আবার চেষ্টা করো — কলমের মাথার দিকে মারলে ঘুরে গিয়ে বেশি জোরে লাগে।`:'এই যে, স্যার আসছেন! কলম পকেটে ঢোকাও।';
-  const cb=$('#bChallenge');cb.hidden=G.mode!=='cpu';cb.querySelector('span').textContent=ch?'পাল্টা চ্যালেঞ্জ পাঠাও':'বন্ধুকে চ্যালেঞ্জ পাঠাও';
-  prepareShare(w);
-  $('#endScreen').hidden=false;
+  $('#chBox').hidden=G.mode!=='cpu';$('#chName').value=G.names[0];$('#bChallenge').querySelector('span').textContent=ch?'পাল্টা চ্যালেঞ্জ পাঠাও':'বন্ধুকে চ্যালেঞ্জ পাঠাও';
+  buildResult(w);prepareShare(w);
+  $('#endScreen').hidden=false;drawTableBg($('#endbg'));$('#endScreen').scrollTop=0;
+}
+
+// The result page: both sides with name, pen and score (the winner crowned), and a few match stats.
+// Names are player input, so they go in as text only.
+function buildResult(w){
+  const board=$('#endBoard');board.textContent='';
+  const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+  const side=i=>{
+    const s=el('div',`bside p${i+1}${i===w?' win':''}`);
+    s.append(el('div','crown',i===w?'🏆 বিজয়ী':'\u00a0'),el('div','bname',who(i)));
+    const cv=el('canvas','bpen');cv.setAttribute('aria-hidden','true');s.append(cv,el('div','bpn',`${pens[i].def.name} · ${pens[i].def.colorBn}`));
+    return [s,cv];
+  };
+  const [s0,c0]=side(0),[s1,c1]=side(1),sc=el('div','bscore');
+  sc.append(el('b',w===0?'won':'',toBn(G.score[0])),el('i',null,'–'),el('b',w===1?'won':'',toBn(G.score[1])));
+  board.append(s0,sc,s1);penThumb(c0,pens[0].def);penThumb(c1,pens[1].def);
+  const st=G.stats,rounds=G.score[0]+G.score[1],list=$('#endStats');list.textContent='';
+  [`🔁 ${toBn(rounds)} রাউন্ড`,`👆 ${toBn(st.shots[0]+st.shots[1])}টা টোকা`,st.knocks?`💥 ${toBn(st.knocks)} বার ঠাস করে ফেলা`:null,rounds>st.knocks?`😅 ${toBn(rounds-st.knocks)} বার নিজের কলমই পড়ল`:null,st.supers?`⚡ সুপার টোকা ${toBn(st.supers)} বার`:null]
+    .filter(Boolean).forEach(t=>list.append(el('li',null,t)));
 }
 
 /* ================= HUD ================= */

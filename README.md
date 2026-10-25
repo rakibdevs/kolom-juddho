@@ -21,6 +21,7 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
   - Hero Fountain Pen: heavy metal tank
   - Hero 616: steel cap, steady
 - **Pick your pen**: any pen in any colour, as often as you like. Against the computer, Rashed gets a random pen. Pens are fixed once a match starts.
+- **স্যার বলেন**: the chalkboard on the home screen chalks up the things every teacher seemed to say (“ঘণ্টা আমার জন্য পড়ে, তোমাদের জন্য না।”), a new one every few seconds or on a tap. The home screen sits on a classroom wall with a clock that shows the real time.
 - **Rename anyone**: your name, Rashed's, or both players' in two-player mode.
 - **Live player count**: how many people are online and in a match right now, from an optional Cloudflare Worker that stores nothing.
 - **Challenge links**: after a match, send a friend a link. They play the computer playing as you, with your pen at your level, and can send a challenge back. Nothing goes to a server; it's all in the link.
@@ -135,7 +136,7 @@ The scripts are classic `<script>` files that share globals, so the game still r
 - Canvas 2D for the top-down view
 - Web Audio for every sound (flicks, hits, falls and the bell), generated in code with no audio files
 - A service worker for offline play
-- Google Fonts: Baloo Da 2 (interface), Atma (chalk and handwriting) and Kalam (English handwriting)
+- Google Fonts: Noto Sans Bengali (interface) and Noto Serif Bengali (headings, chalkboard and blackboard, in the style of a printed school textbook)
 
 All textures (the blackboard, wood, cement floor, village mural, wall charts and notice board) are drawn in code at runtime. The only image files are the icons and the link preview in `assets/`, which the game itself never loads.
 

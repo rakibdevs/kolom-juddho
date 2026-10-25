@@ -17,7 +17,7 @@ It must stay one-thumb playable on a cheap phone, Bangla first, offline after th
 | 3 | Progress | No wins, streaks or trophies are kept. | Without something to come back for, one match is the whole game. |
 | 4 | Pens | Linc and Cello are drawn from catalogue descriptions, not photos. No customising. | Kids bragged about pens: the new Matador, the chewed cap, the sticker. The pen has to look right. |
 | 5 | Rules | Only "knock it off". | Real classrooms had local rules, such as landing on top of the other pen. |
-| 6 | Tech | No automated checks in CI. `assets/game-snapshot.png` (3.8 MB) is deployed but unused. `assets/og-image` still uses the old interface font. | Reliability, page weight and a consistent link preview. |
+| 6 | Tech | No automated checks in CI. `assets/game-snapshot.png` (3.8 MB) is deployed but unused. `assets/og-image` still uses the old fonts and English tagline. | Reliability, page weight and a consistent link preview. |
 
 ## Design principles
 
@@ -60,14 +60,14 @@ Effort sizes: **S** is a day or less, **M** is two to four days, **L** is a week
 - **Checks.** Commit the physics Monte Carlo (used to balance ⚡) as `tools/sim.js`, run with plain `node`. Add `node --check` for every script to the Pages workflow. Keep to Node built-ins, with no npm, per `AGENTS.md`.
 - **Actions runtime.** The Pages workflow warns that Node 20 actions are deprecated; bump the action versions.
 - **Page weight.** Exclude `assets/game-snapshot.png` (3.8 MB) from the deployed site, or convert it to a small JPEG for the README.
-- **Link preview.** Regenerate `assets/og-image` with `tools/og-image.html` so it uses Baloo Da 2.
+- **Link preview.** Regenerate `assets/og-image` with `tools/og-image.html` so it uses the Noto Bengali fonts and the Bangla tagline.
 - **Home screen fit.** In two-player mode on a desktop the match card is a little taller than the screen, so the sticky ▶ button covers the view toggle until you scroll.
 
 ## Cross-cutting implementation notes
 
 - **Data first.** `PENS`, `RIVALS`, `LINES` and `TROPHIES` live in `js/config.js`, so content contributions don't touch logic.
 - **Storage.** One `js/store.js` with namespaced keys (`kolom-juddho:*`), a schema version, and try/catch around every read and write. Migrate `setup` and `names` into it.
-- **Performance budget.** Stay at 60 fps on a mid-range phone. Watch `renderer.info.render.calls` (about 217 now). Use instancing for the crowd and trees.
+- **Performance budget.** Stay at 60 fps on a mid-range phone. Watch `renderer.info.render.calls` and the scene's mesh count (483 now; the trees are already merged). Use instancing for the crowd and trees.
 - **Privacy.** Progress, names and setup stay on the device. No analytics without a clear opt-in.
 
 ## Suggested order

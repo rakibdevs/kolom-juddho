@@ -36,7 +36,7 @@ function camHome(){
 function resetCam(){if(camera)Object.assign(cam,camHome(),{user:false});}
 function tex(canvas,rep){const t=new THREE.CanvasTexture(canvas);t.anisotropy=8;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t;}
 function chalkText(g,txt,x,y,size,color,align){
-  g.font=`600 ${size}px ${FONT_CHALK}`;g.textAlign=align||'left';g.textBaseline='middle';g.fillStyle=color||'#f2f1ea';
+  g.font=`600 ${size}px ${FONT_DISPLAY}`;g.textAlign=align||'left';g.textBaseline='middle';g.fillStyle=color||'#f2f1ea';
   for(let k=0;k<4;k++){g.globalAlpha=.22;g.fillText(txt,x+(Math.random()-.5)*3,y+(Math.random()-.5)*3);}
   g.globalAlpha=.85;g.fillText(txt,x,y);g.globalAlpha=1;
 }
@@ -74,7 +74,7 @@ function noticeCanvas(){
   return mkCanvas(512,360,(g,w,h)=>{
     g.fillStyle='#b98a56';g.fillRect(0,0,w,h);
     for(let i=0;i<2500;i++){g.fillStyle='rgba(60,30,10,.15)';g.fillRect(Math.random()*w,Math.random()*h,2,2);}
-    const paper=(x,y,pw,ph,rot,c,lines)=>{g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=c;g.fillRect(0,0,pw,ph);g.fillStyle='#2a2a2a';g.font=`600 27px ${FONT_CHALK}`;lines.forEach((l,i)=>g.fillText(l,14,36+i*32));g.fillStyle='#c0392b';g.beginPath();g.arc(pw/2,8,7,0,7);g.fill();g.restore();};
+    const paper=(x,y,pw,ph,rot,c,lines)=>{g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=c;g.fillRect(0,0,pw,ph);g.fillStyle='#2a2a2a';g.font=`600 27px ${FONT_DISPLAY}`;lines.forEach((l,i)=>g.fillText(l,14,36+i*32));g.fillStyle='#c0392b';g.beginPath();g.arc(pw/2,8,7,0,7);g.fill();g.restore();};
     paper(24,30,240,180,-.04,'#fffdf5',['ক্লাস রুটিন','১ম: বাংলা','২য়: গণিত','টিফিন: ১১:৩০']);
     paper(282,46,200,130,.05,'#fff3b8',['বার্ষিক','ক্রীড়া','প্রতিযোগিতা']);
     paper(290,200,190,130,-.03,'#d9f0ff',['নীরবতা','পালন করুন']);
@@ -189,17 +189,98 @@ function facadeCanvas(){
     g.fillStyle='#1f5a3a';g.textAlign='center';g.textBaseline='middle';g.fillText(name,w/2,st+sh2/2+4);
   });
 }
-// Trees share one trunk and one leaf-ball geometry, scaled per mesh, to keep phones fast.
-let trunkGeo=null,leafGeo=null;
-function tree(x,z,s,leafM,barkM){
-  if(!trunkGeo){trunkGeo=new THREE.CylinderGeometry(.5,.75,9,7);leafGeo=new THREE.IcosahedronGeometry(1,1);}
-  const t=new THREE.Mesh(trunkGeo,barkM);t.scale.setScalar(s);t.position.set(x,GROUND+4.5*s,z);scene.add(t);
-  [[0,11,0,4.6,0],[2.4,9.4,1.2,3.6,1],[-2.2,9.8,-1.4,3.6,1]].forEach(([dx,dy,dz,r,k])=>{const f=new THREE.Mesh(leafGeo,leafM[k]);f.scale.setScalar(r*s);f.position.set(x+dx*s,GROUND+dy*s,z+dz*s);scene.add(f);});
+// Outdoor trees. Each tree is merged into a few meshes (trunk with branches, canopy, and for palms the
+// coconuts) so the field stays cheap on phones; canopies and palm crowns sit in pivot groups that swayTrees
+// rocks in the wind. Shapes are seeded, so the field looks the same on every visit.
+const swayers=[];let leafDrift=null;
+let seed3=11;const rnd3=()=>(seed3=(seed3*16807)%2147483647)/2147483647;
+// Joins geometries into one, each moved by its matrix and painted by colourOf(nx, ny, nz, x, y, z) -> THREE.Color.
+function mergeGeos(parts,colourOf){
+  const gs=parts.map(([geo,m])=>{const g=(geo.index?geo.toNonIndexed():geo.clone());g.applyMatrix4(m);if(!g.attributes.normal)g.computeVertexNormals();return g;});
+  const n=gs.reduce((k,g)=>k+g.attributes.position.count,0),pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);
+  let o=0;const c=new THREE.Color();
+  gs.forEach((g,gi)=>{
+    const p=g.attributes.position.array,q=g.attributes.normal.array;pos.set(p,o*3);nor.set(q,o*3);
+    for(let i=0;i<p.length;i+=3){colourOf(c,q[i],q[i+1],q[i+2],p[i],p[i+1],p[i+2],gi);col[o*3+i]=c.r;col[o*3+i+1]=c.g;col[o*3+i+2]=c.b;}
+    o+=p.length/3;g.dispose();
+  });
+  const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(pos,3));out.setAttribute('normal',new THREE.BufferAttribute(nor,3));out.setAttribute('color',new THREE.BufferAttribute(col,3));return out;
 }
-function palm(x,z,s,leafM,barkM){
-  const t=new THREE.Mesh(new THREE.CylinderGeometry(.32*s,.5*s,16*s,7),barkM);t.position.set(x,GROUND+8*s,z);t.rotation.z=.08;scene.add(t);
-  for(let i=0;i<8;i++){const f=new THREE.Mesh(new THREE.BoxGeometry(7*s,.15*s,1.1*s),leafM[i%2]);const a=i*Math.PI/4;
-    f.position.set(x-.6*s+Math.cos(a)*3*s,GROUND+15.4*s,z+Math.sin(a)*3*s);f.rotation.set(0,-a,-.45);scene.add(f);}
+const M4=(x,y,z,sx,sy,sz,rx,ry,rz)=>new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rx||0,ry||0,rz||0)),new THREE.Vector3(sx,sy||sx,sz||sx));
+// A lumpy foliage clump: an icosahedron with each vertex pushed in or out by a hash of its position.
+function clumpGeo(){
+  const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position;
+  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),h=Math.sin(x*12.9+y*78.2+z*37.7)*43758.5,k=.84+(h-Math.floor(h))*.3;p.setXYZ(i,x*k,y*k*.86,z*k);}
+  g.computeVertexNormals();return g;
+}
+let treeKit=null;
+function buildTreeKit(){
+  const clump=clumpGeo(),bark=new THREE.Color(0x5a4330),barkDark=new THREE.Color(0x3e2e20);
+  const greens=[0x2f6b2a,0x3f7f34,0x4f8f3a,0x5d9a40].map(h=>new THREE.Color(h));
+  // three broadleaf canopies, each a dome of clumps around a centre one
+  const canopies=[0,1,2].map(v=>{
+    const parts=[[clump,M4(0,1.6,0,4.2,3.6,4.2)]],n=6+v;
+    for(let i=0;i<n;i++){const a=i/n*Math.PI*2+v,r=2.6+rnd3()*1.2,y=.4+rnd3()*2.2,s=1.8+rnd3()*1.4;parts.push([clump,M4(Math.cos(a)*r,y,Math.sin(a)*r,s,s*.85,s,0,rnd3()*3,0)]);}
+    return mergeGeos(parts,(c,nx,ny,nz,x,y,z,gi)=>{c.copy(greens[(gi+v)%greens.length]).multiplyScalar(.62+.38*(ny*.5+.5)+ (y>3?.08:0));});
+  });
+  // trunk with two forked branches, flared at the foot
+  const trunkParts=[[new THREE.CylinderGeometry(.42,.78,9,8),M4(0,4.5,0,1)],[new THREE.CylinderGeometry(.18,.34,4.2,6),M4(1.1,8.6,.2,1,1,1,0,0,-.62)],[new THREE.CylinderGeometry(.16,.3,3.8,6),M4(-1,8.4,-.3,1,1,1,.2,0,.58)]];
+  const trunk=mergeGeos(trunkParts,(c,nx,ny)=>{c.copy(bark).lerp(barkDark,.5-nx*.5);});
+  // palm: a gently curved trunk, ten drooping fronds and a coconut cluster
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(.5,5,0),new THREE.Vector3(1.6,10,0),new THREE.Vector3(3,15.6,0)]);
+  const palmTrunk=mergeGeos([[new THREE.TubeGeometry(curve,14,.42,7,false),new THREE.Matrix4()]],(c,nx,ny,nz,x,y)=>{c.copy(bark).lerp(barkDark,(Math.sin(y*5)*.5+.5)*.5);}); // ring marks
+  const frond=new THREE.PlaneGeometry(1,1,10,2),fp=frond.attributes.position;
+  for(let i=0;i<fp.count;i++){const u=fp.getX(i)+.5,w=fp.getY(i);fp.setXYZ(i,u*7.5,-u*u*3.2+u*.9,w*(1.6*Math.sin(Math.PI*Math.min(1,u*1.15))+.15));}
+  frond.computeVertexNormals();
+  const frondParts=[];for(let i=0;i<10;i++){const a=i/10*Math.PI*2+rnd3()*.3,lift=(rnd3()-.5)*.5;frondParts.push([frond,M4(0,0,0,1,1,1,0,a,lift)]);}
+  const crown=mergeGeos(frondParts,(c,nx,ny)=>{c.copy(greens[2]).multiplyScalar(.7+.3*Math.abs(ny));});
+  const nut=new THREE.SphereGeometry(.45,8,6),nuts=mergeGeos([0,1,2,3,4].map(i=>[nut,M4(Math.cos(i*1.3)*.55,-.5-(i%2)*.35,Math.sin(i*1.3)*.55,1)]),c=>{c.set(0x7a6a2a);});
+  treeKit={canopies,trunk,palmTrunk,crown,nuts,
+    leafM:new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.9}),
+    barkM:new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}),
+    frondM:new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.85})};
+}
+function tree(x,z,s,v){
+  if(!treeKit)buildTreeKit();const k=treeKit;
+  const t=new THREE.Mesh(k.trunk,k.barkM);t.scale.setScalar(s);t.position.set(x,GROUND,z);t.rotation.y=rnd3()*6;scene.add(t); // outside the shadow camera: no shadows
+  const pivot=new THREE.Group();pivot.position.set(x,GROUND+8.8*s,z);pivot.scale.setScalar(s);pivot.rotation.y=rnd3()*6;scene.add(pivot);
+  pivot.add(new THREE.Mesh(k.canopies[v%3],k.leafM));
+  swayers.push({o:pivot,amp:.035,ph:rnd3()*6.3,base:pivot.rotation.y});
+}
+function palm(x,z,s,turn){
+  if(!treeKit)buildTreeKit();const k=treeKit;
+  const t=new THREE.Mesh(k.palmTrunk,k.barkM);t.scale.setScalar(s);t.position.set(x,GROUND,z);t.rotation.y=turn;scene.add(t);
+  const top=new THREE.Vector3(3,15.6,0).multiplyScalar(s).applyAxisAngle(new THREE.Vector3(0,1,0),turn);
+  const pivot=new THREE.Group();pivot.position.set(x+top.x,GROUND+top.y,z+top.z);pivot.scale.setScalar(s);scene.add(pivot);
+  pivot.add(new THREE.Mesh(k.crown,k.frondM),new THREE.Mesh(k.nuts,k.barkM));
+  swayers.push({o:pivot,amp:.09,ph:rnd3()*6.3,base:0,palm:true});
+}
+// Leaves blowing across the field, as one point cloud seen through the door and windows.
+function buildLeafDrift(){
+  const n=70,pos=new Float32Array(n*3),col=new Float32Array(n*3),seeds=[];
+  const tints=[0x6e9a3a,0x9aa83c,0xc9a23a,0x8a6a2e].map(h=>new THREE.Color(h));
+  for(let i=0;i<n;i++){seeds.push({x:-120+rnd3()*190,y:GROUND+1+rnd3()*16,z:-60+rnd3()*160,sp:.7+rnd3()*.8,ph:rnd3()*6.3});const c=tints[i%4];col.set([c.r,c.g,c.b],i*3);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const leaf=mkCanvas(32,32,c=>{c.fillStyle='#fff';c.beginPath();c.ellipse(16,16,14,7,.6,0,7);c.fill();});
+  const pts=new THREE.Points(g,new THREE.PointsMaterial({size:.7,map:tex(leaf),vertexColors:true,sizeAttenuation:true,transparent:true,alphaTest:.4,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
+  leafDrift={pos:g.attributes.position,seeds};
+}
+// The wind: a breeze that rises into gusts every few seconds. 0 to 1.
+const wind=t=>.45+.55*Math.max(0,Math.sin(t*.37)*Math.sin(t*.13+1.7));
+// Rocks the canopies and palm crowns, and blows the drifting leaves; called every 3D frame.
+function swayTrees(now){
+  const t=now/1000,w=wind(t);
+  for(const s of swayers){
+    const a=s.amp*(.35+w)*(Math.sin(t*(s.palm?1.6:1.1)+s.ph)+.35*Math.sin(t*2.9+s.ph*2));
+    s.o.rotation.z=a;s.o.rotation.x=a*.45;
+  }
+  if(!leafDrift)return;const {pos,seeds}=leafDrift;
+  seeds.forEach((d,i)=>{
+    const x=((d.x+t*d.sp*(3+9*w))%190+190)%190-120; // blows towards +x and wraps round
+    const z=d.z+Math.sin(t*.9+d.ph)*3,inside=Math.abs(x)<31&&z>-14&&z<54; // never inside the classroom
+    pos.setXYZ(i,x,inside?-500:d.y+Math.sin(t*1.7+d.ph)*1.2,z);
+  });
+  pos.needsUpdate=true;
 }
 // Field, school building, flag, trees and boundary wall seen through the door and windows.
 function buildOutside(){
@@ -217,21 +298,27 @@ function buildOutside(){
   box(5,.8,5,concrete,fx,GROUND+.4,fz,false);box(3,.8,3,concrete,fx,GROUND+1.2,fz,false);
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,poleH,10),poleM);pole.position.set(fx,GROUND+poleH/2,fz);scene.add(pole);
   const knob=new THREE.Mesh(new THREE.SphereGeometry(.35,10,8),mat(0xd4af37,{metalness:.7,roughness:.3}));knob.position.set(fx,GROUND+poleH+.2,fz);scene.add(knob);
-  const fw=7,fh=4.2,fg=new THREE.PlaneGeometry(fw,fh,16,6);fg.translate(fw/2,0,0); // hoist edge at x = 0
+  const fw=7,fh=4.2,fg=new THREE.PlaneGeometry(fw,fh,28,12);fg.translate(fw/2,0,0); // hoist edge at x = 0
   const flag=new THREE.Mesh(fg,new THREE.MeshStandardMaterial({map:tex(flagCanvas()),side:THREE.DoubleSide,roughness:.8}));
   flag.rotation.y=Math.PI/2;flag.position.set(fx,GROUND+poleH-fh/2-.3,fz-.2);scene.add(flag);
   flagWave={pos:fg.attributes.position,base:Float32Array.from(fg.attributes.position.array),geo:fg};
   // trees, a couple of coconut palms, and the brick boundary wall seen through the windows
-  const leafM=[mat(0x3f7f34,{flatShading:true}),mat(0x569a3e,{flatShading:true})],barkM=mat(0x5a4330,{roughness:1});
-  [[-72,-12,1.1],[-80,50,1.4],[-64,58,1],[-86,-34,1.2],[48,2,1.1],[56,26,1.3],[46,50,1],[62,-16,1.2],[54,70,1.1],[-12,-42,1.3],[18,96,1.4]].forEach(([x,z,s])=>tree(x,z,s,leafM,barkM));
-  [[-66,34,1],[60,40,1.05],[44,-28,.95]].forEach(([x,z,s])=>palm(x,z,s,leafM,barkM));
-  for(let i=0;i<24;i++){const a=i/24*Math.PI*2,r=150+(i*37)%40;tree(Math.cos(a)*r,20+Math.sin(a)*r,1.6+(i%4)*.25,leafM,barkM);}
+  [[-72,-12,1.1],[-80,50,1.4],[-64,58,1],[-86,-34,1.2],[48,2,1.1],[56,26,1.3],[46,50,1],[62,-16,1.2],[54,70,1.1],[-12,-42,1.3],[18,96,1.4]].forEach(([x,z,s],i)=>tree(x,z,s,i));
+  [[-66,34,1,.4],[60,40,1.05,2.6],[44,-28,.95,4]].forEach(([x,z,s,turn])=>palm(x,z,s,turn));
+  for(let i=0;i<24;i++){const a=i/24*Math.PI*2,r=150+(i*37)%40;tree(Math.cos(a)*r,20+Math.sin(a)*r,1.6+(i%4)*.25,i);}
+  buildLeafDrift();
   const brick=tex(brickCanvas(),[40,1.4]);box(1.2,6,170,mat(0xffffff,{map:brick}),80,GROUND+3,20,false);
 }
 // Waves the flag; called every 3D frame.
 function waveFlag(now){
-  if(!flagWave)return;const {pos,base}=flagWave,t=now/1000;
-  for(let i=0;i<pos.count;i++){const x=base[i*3],y=base[i*3+1];pos.setZ(i,Math.sin(x*1.1-t*4+y*.3)*.32*(x/7));}
+  if(!flagWave)return;const {pos,base}=flagWave,t=now/1000,w=wind(t),sp=3+2.5*w;
+  // two travelling ripples that grow towards the fly end, a flutter of the fly end up and down, and a droop
+  // of the free corner when the breeze drops: the cloth billows and curls instead of moving as one sheet
+  for(let i=0;i<pos.count;i++){
+    const x=base[i*3],y=base[i*3+1],f=x/7,g=f*f;
+    const z=(Math.sin(x*1.15-t*sp+y*.35)*(.42+.4*w)+Math.sin(x*2.3-t*sp*1.7-y*.5)*(.1+.12*w))*(.2+.8*f);
+    pos.setXYZ(i,x-Math.abs(z)*.3*f,y+Math.sin(x*1.3-t*sp*.9+y*.2)*.32*g*(.5+w)-(1-w)*.6*g,z); // wavy top and bottom edges
+  }
   pos.needsUpdate=true;flagWave.geo.computeVertexNormals();
 }
 // Builds a side wall at x from boxes, leaving each opening [z0, z1, y0, y1] open to the outside.
@@ -321,28 +408,50 @@ function buildScene(){
   const clk=new THREE.Mesh(new THREE.CylinderGeometry(1.8,1.8,.3,40),[mat(0x5b3a1e),mat(0xffffff,{map:tex(clockCanvas())}),mat(0x5b3a1e)]);clk.rotation.set(Math.PI/2,0,0);clk.position.set(16,24,-11.8);scene.add(clk);
   const flag=new THREE.Mesh(new THREE.PlaneGeometry(4,2.4),mat(0xffffff,{map:tex(flagCanvas())}));flag.position.set(-16,24,-11.95);scene.add(flag);
 
-  const top=mat(0xffffff,{map:tex(ART.tableWood,[1.6,1]),roughness:.5});
+  const top=mat(0xffffff,{map:tex(ART.tableWood),roughness:.82}); // old dull varnish
   box(HX*2+.5,.45,HZ*2+.5,top,0,TOP-.225,0);
-  const legM=mat(0xffffff,{map:tex(ART.legWood)}),lh=TOP-DAIS-.45;
+  const legM=mat(0xffffff,{map:tex(ART.legWood),roughness:.92}),lh=TOP-DAIS-.45;
   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>box(.6,lh,.6,legM,sx*(HX-.3),DAIS+lh/2,sz*(HZ-.3)));
   box(HX*2-.6,4.2,.2,legM,0,TOP-.45-2.1,HZ-.25);
   box(4,1.1,HZ*2-1,legM,HX-2.6,TOP-1.05,0);
-  const ch=mat(0xffffff,{map:tex(ART.darkWood)}),cz=-7.6,seatY=DAIS+4.6;
-  box(4.2,.35,4,ch,0,seatY,cz);
-  [[-1.8,-1.7],[1.8,-1.7],[-1.8,1.7],[1.8,1.7]].forEach(([x,z])=>box(.3,4.5,.3,ch,x,DAIS+2.25,cz+z));
-  box(4.2,5,.3,ch,0,seatY+2.6,cz-1.85);
+  const ch=mat(0xffffff,{map:tex(ART.darkWood),roughness:.9}),cz=-7.6,seatY=DAIS+4.6;
+  // Sir's chair: a traditional wooden armchair facing the class, with turned front legs, back posts that lean
+  // back a little, a bowed top rail over three slats, armrests on turned spindles, an apron and rungs
+  const chairPart=(geo,x,y,z,rx)=>{const m=new THREE.Mesh(geo,ch);m.position.set(x,y,z);if(rx)m.rotation.x=rx;m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;};
+  const turned=(h,r)=>{const p=[[1,0],[1.15,.06],[.95,.12],[.8,.3],[1.1,.5],[.75,.62],[.8,.85],[1.2,.9],[1.2,1]].map(([k,f])=>new THREE.Vector2(r*k,h*f));return new THREE.LatheGeometry(p,12);};
+  const legH=seatY-DAIS-.15;
+  [-1.8,1.8].forEach(x=>{
+    chairPart(turned(legH,.17),x,DAIS,cz+1.65);                                      // turned front leg
+    const postH=legH+5.4;chairPart(new THREE.BoxGeometry(.32,postH,.32),x,DAIS+postH/2,cz-1.72,-.06); // back leg and post
+    chairPart(new THREE.BoxGeometry(.18,.18,3.2),x,DAIS+1.1,cz);                      // side rung
+    chairPart(turned(1.75,.11),x*1.02,seatY+.15,cz+1.45);                             // armrest spindle
+    chairPart(new THREE.BoxGeometry(.42,.2,3.5),x*1.03,seatY+2,cz-.05);               // armrest
+    chairPart(new THREE.CylinderGeometry(.21,.21,.42,12).rotateZ(Math.PI/2),x*1.03,seatY+2,cz+1.7); // rounded arm end
+  });
+  chairPart(new THREE.BoxGeometry(3.9,.18,.18),0,DAIS+1.1,cz+1.6);                    // front rung
+  chairPart(new THREE.BoxGeometry(4.2,.3,3.9),0,seatY,cz);                            // seat
+  chairPart(new THREE.BoxGeometry(3.6,.5,.12),0,seatY-.38,cz+1.82);                   // apron
+  chairPart(new THREE.BoxGeometry(.12,.5,3.4),-1.75,seatY-.38,cz);chairPart(new THREE.BoxGeometry(.12,.5,3.4),1.75,seatY-.38,cz);
+  const rail=new THREE.CatmullRomCurve3([new THREE.Vector3(-1.9,0,0),new THREE.Vector3(0,.18,-.32),new THREE.Vector3(1.9,0,0)]);
+  chairPart(new THREE.TubeGeometry(rail,16,.2,8,false),0,seatY+5,cz-2.02);             // bowed top rail
+  chairPart(new THREE.BoxGeometry(3.5,.3,.16),0,seatY+1.35,cz-1.86,-.06);             // lower back rail
+  [-1,0,1].forEach(i=>chairPart(new THREE.BoxGeometry(.5,3.4,.09),i*1.05,seatY+3.15,cz-1.97+i*i*.05,-.06)); // back slats
   const cane=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,11,10),mat(0x9a6a33,{roughness:.6}));cane.rotation.z=Math.PI/2;cane.rotation.y=.35;cane.position.set(.5,seatY+.27,cz+.3);cane.castShadow=true;scene.add(cane);
   box(2.6,.35,3.4,mat(0x7a1f22),-.6,seatY+.35,cz-.3);
 
   // long high desks on thin legs with a book shelf, and a separate low bench behind each
-  const bw=mat(0xffffff,{map:tex(ART.benchWood,[2,1])}),bl=mat(0x4a2c16);
+  // rough old wood: carved desk tops (three variants), worn benches, dark scuffed legs, all matte
+  const bw=mat(0xffffff,{map:tex(ART.benchWood,[3,1]),roughness:.95}),bl=mat(0xffffff,{map:tex(ART.legWood,[1,3]),roughness:.95});
+  const deskM=ART.deskTops.map(c=>{const t=tex(c);t.center.set(.5,.5);t.rotation=Math.PI; // carvings read from the bench side
+    return [bl,bl,mat(0xffffff,{map:t,roughness:.9}),bl,bl,bl];}); // carved top face, plain edges
   const bagCols=[0x2b5ea8,0x2f7d4e,0xb0352f,0x6b4fa0,0x222831],bookCols=[0x3d6fb6,0xc8302b,0x2f7d4e,0xe0a12a,0x8a4fa0];
   [-14,14].forEach((cx,ci)=>{[13,21,29,37,45].forEach((z,ri)=>{
     const k=ci*5+ri;
-    box(16,.3,2.4,bw,cx,7.3,z);box(16,.6,.12,bl,cx,6.85,z-1.14);box(16,.12,1.9,bl,cx,5.7,z+.05,false);
+    const tilt=((k*7)%5-2)*.004; // nothing in an old classroom lines up perfectly
+    box(16,.3,2.4,deskM[k%3],cx,7.3,z).rotation.y=tilt;box(16,.6,.12,bl,cx,6.85,z-1.14);box(16,.12,1.9,bl,cx,5.7,z+.05,false);
     [[-7.7,-1.05],[7.7,-1.05],[-7.7,1.05],[7.7,1.05]].forEach(([x,dz])=>box(.22,7.15,.22,bl,cx+x,3.58,z+dz));
     box(.16,.16,2.1,bl,cx-7.7,1.2,z,false);box(.16,.16,2.1,bl,cx+7.7,1.2,z,false);
-    box(16,.3,1.4,bw,cx,4.3,z+2.75);
+    box(16,.3,1.4,bw,cx,4.3,z+2.75).rotation.y=-tilt*1.5;
     [[-7.6,2.25],[7.6,2.25],[-7.6,3.25],[7.6,3.25]].forEach(([x,dz])=>box(.2,4.15,.2,bl,cx+x,2.08,z+dz));
     // bags on the benches; books, exercise books and pencil boxes on the desks
     if(k%2===0){const bag=box(2.2,2.6,1.2,mat(bagCols[k%5]),cx-4+ri*1.5,5.75,z+2.75);bag.rotation.y=(ri-2)*.2;}

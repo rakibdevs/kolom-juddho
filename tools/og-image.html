@@ -8,7 +8,7 @@
 <head>
 <meta charset="utf-8">
 <title>OG image</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700&family=Atma:wght@600;700&family=Kalam:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600;700&display=swap" rel="stylesheet">
 <style>
 html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#3d2210}
 canvas{display:block}
@@ -23,7 +23,7 @@ canvas{display:block}
 <script>
 "use strict";
 (async()=>{
-  await Promise.all([document.fonts.load('700 120px Atma','কলম যুদ্ধ'),document.fonts.load('600 40px "Baloo Da 2"','খেলা'),document.fonts.load('400 40px Kalam','Pen')]);
+  await Promise.all([document.fonts.load('700 120px "Noto Serif Bengali"','কলম যুদ্ধ'),document.fonts.load('600 40px "Noto Sans Bengali"','খেলা')]);
   buildArt();
   const g=$('#og').getContext('2d'),W=1200,H=630;
   drawTableTop(g,W,H);
@@ -33,9 +33,9 @@ canvas{display:block}
   g.fillStyle='rgba(0,0,0,.35)';rr(g,bx+8,by+14,bw,bh,10);g.fill();
   g.fillStyle='#6a4024';rr(g,bx,by,bw,bh,10);g.fill();g.fillStyle='#22342b';g.fillRect(bx+18,by+18,bw-36,bh-36);
   g.fillStyle='#f4f2ea';g.textAlign='center';g.textBaseline='alphabetic';
-  g.font=`700 128px ${FONT_CHALK}`;g.fillText('কলম যুদ্ধ',W/2,by+170);
-  g.font='400 40px Kalam, cursive';g.globalAlpha=.9;g.fillText('Pen fight on Sir’s table',W/2,by+228);g.globalAlpha=1;
-  g.fillStyle='#f3e58c';g.font=`600 34px ${FONT_CHALK}`;g.fillText('টিফিন পিরিয়ডে বন্ধুর কলম টেবিল থেকে ফেলে দাও!',W/2,by+292);
+  g.font=`700 128px ${FONT_DISPLAY}`;g.fillText('কলম যুদ্ধ',W/2,by+170);
+  g.font=`600 40px ${FONT_DISPLAY}`;g.globalAlpha=.9;g.fillText('স্যারের টেবিলে কলমের লড়াই',W/2,by+228);g.globalAlpha=1;
+  g.fillStyle='#f3e58c';g.font=`600 34px ${FONT_DISPLAY}`;g.fillText('টিফিন পিরিয়ডে বন্ধুর কলম টেবিল থেকে ফেলে দাও!',W/2,by+292);
   // four pens below the board
   PENS.forEach((p,i)=>{g.save();g.translate(420+i*175,505+(i%2)*36);g.rotate(i%2?.18:-.18);g.scale(120,120);drawPen2D(g,{def:penDef(p.id),x:0,z:0,a:0});g.restore();});
   g.fillStyle='rgba(255,255,255,.9)';g.font=`600 26px ${FONT_UI}`;g.fillText('3D আর 2D · রাশেদ বা বন্ধুর সাথে · ফ্রি ব্রাউজার গেম',W/2,H-22);

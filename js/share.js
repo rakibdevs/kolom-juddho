@@ -22,7 +22,15 @@ function grabView(){
     return c;
   }catch(e){return null;}
 }
-const shareURL=()=>location.protocol.startsWith('http')?location.host+location.pathname.replace(/index\.html$/,'').replace(/\/$/,''):'';
+// The public site address (the canonical link the deploy fills in) when there is one, so links and the card made
+// on a local copy still point friends to the live game; otherwise this page. Ends with a slash.
+function siteBase(){
+  const c=document.querySelector('link[rel="canonical"]'),h=c&&c.getAttribute('href');
+  if(h&&/^https?:\/\//.test(h))return h.replace(/\/?$/,'/');
+  return location.protocol.startsWith('http')?location.origin+location.pathname.replace(/index\.html$/,''):'';
+}
+// The same address without the scheme or trailing slash, for the card and the caption.
+const shareURL=()=>siteBase().replace(/^https?:\/\//,'').replace(/\/$/,'');
 
 // Shrinks the font until txt fits in max pixels.
 function fitFont(g,txt,max,weight,size,family){for(;;){g.font=`${weight} ${size}px ${family}`;if(g.measureText(txt).width<=max||size<=14)return size;size-=2;}}
@@ -41,14 +49,14 @@ function drawResultCard(view,w){
   // header: icon, name and date
   rr(g,60,52,84,84,22);g.fillStyle='#22342b';g.fill();g.strokeStyle='#6a4024';g.lineWidth=6;g.stroke();
   g.save();g.translate(102,94);g.rotate(-.6);g.scale(44,44);drawPen2D(g,{def:pens[0].def,x:0,z:0,a:0});g.restore();
-  g.textAlign='left';g.fillStyle=CARD.ink;g.font=`700 50px ${FONT_CHALK}`;g.fillText('কলম যুদ্ধ',166,100);
-  g.fillStyle=CARD.muted;g.font='400 24px Kalam, cursive';g.fillText('Pen fight on Sir’s table',168,132);
+  g.textAlign='left';g.fillStyle=CARD.ink;g.font=`700 50px ${FONT_DISPLAY}`;g.fillText('কলম যুদ্ধ',166,100);
+  g.fillStyle=CARD.muted;g.font=`600 23px ${FONT_DISPLAY}`;g.fillText('স্যারের টেবিলে কলমের লড়াই',168,132);
   const date=`${todayBn()} · ${weekdayBn()}`;g.font=`600 24px ${FONT_UI}`;const dw=g.measureText(date).width+40;
   pill(g,1020-dw,70,dw,50,CARD.glass,CARD.edge);g.fillStyle=CARD.ink;g.textAlign='center';g.fillText(date,1020-dw/2,103);
 
   // headline
   g.fillStyle=CARD.gold;g.font=`600 28px ${FONT_UI}`;g.fillText('ম্যাচের ফলাফল',mid,232);
-  const title=$('#endTitle').textContent;fitFont(g,title,940,700,92,FONT_CHALK);
+  const title=$('#endTitle').textContent;fitFont(g,title,940,700,92,FONT_DISPLAY);
   g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=24;g.fillStyle=CARD.ink;g.fillText(title,mid,334);g.shadowColor='transparent';
 
   // scoreboard
@@ -87,7 +95,7 @@ function drawResultCard(view,w){
 async function prepareShare(w){
   const view=grabView(),btns=[$('#bShare'),$('#bSave')],img=$('#shotPreview');
   shotBlob=null;btns.forEach(b=>b.disabled=true);img.hidden=true;shareNote('');
-  try{await Promise.race([Promise.all([document.fonts.load('400 24px Kalam'),document.fonts.load('700 92px Atma','তুমি'),document.fonts.load(`700 36px ${FONT_UI}`,'তুমি'),document.fonts.load(`500 22px ${FONT_UI}`,'তুমি')]),new Promise(r=>setTimeout(r,1500))]);}catch(e){}
+  try{await Promise.race([Promise.all([document.fonts.load(`600 23px ${FONT_DISPLAY}`,'লড়াই'),document.fonts.load(`700 92px ${FONT_DISPLAY}`,'তুমি'),document.fonts.load(`700 36px ${FONT_UI}`,'তুমি'),document.fonts.load(`500 22px ${FONT_UI}`,'তুমি')]),new Promise(r=>setTimeout(r,1500))]);}catch(e){}
   const card=drawResultCard(view,w);
   card.toBlob(b=>{
     if(!b)return;shotBlob=b;btns.forEach(b=>b.disabled=false);
@@ -99,7 +107,7 @@ async function prepareShare(w){
 // Phones and tablets: the share sheet hands the photo to the Facebook app, which opens a new photo post.
 // Desktops (whose share sheets have no Facebook): save the photo, copy a caption and open Facebook.
 const canSharePhoto=f=>matchMedia('(pointer:coarse)').matches&&!!navigator.canShare&&navigator.canShare({files:[f]});
-function shareCaption(){const url=shareURL();return `${$('#endTitle').textContent} ${$('#endScore').textContent} — কলম যুদ্ধ${url?` খেলো: https://${url}`:''} #কলমযুদ্ধ`;}
+function shareCaption(){const url=shareURL();return `${$('#endTitle').textContent} স্কোর ${toBn(G.score[0])}–${toBn(G.score[1])} — কলম যুদ্ধ${url?` খেলো: https://${url}`:''} #কলমযুদ্ধ`;}
 function shareNote(t){const n=$('#shareNote');n.textContent=t;n.hidden=!t;}
 function saveShot(){if(!shotURL)return;const a=document.createElement('a');a.href=shotURL;a.download='kolom-juddho.jpg';document.body.appendChild(a);a.click();a.remove();}
 async function shareFacebook(){

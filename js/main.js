@@ -4,7 +4,7 @@
 /* ================= loop ================= */
 let acc=0,last=performance.now();
 function sync3D(now){
-  fans.forEach(f=>f.rotation.y+=.15);waveFlag(now);
+  fans.forEach(f=>f.rotation.y+=.15);waveFlag(now);swayTrees(now);
   pens.forEach((p,i)=>{
     const m=meshes[i];if(!m)return;
     m.outer.position.set(p.x,p.falling?p.falling.y:TOP+p.r,p.z);m.outer.rotation.y=-p.a;
@@ -51,7 +51,7 @@ function frame(now){
 
 /* ================= boot ================= */
 async function init(){
-  try{await Promise.race([Promise.all([document.fonts.load('600 64px Atma','আজকের পড়া'),document.fonts.load('700 64px Atma','হাজিরা'),document.fonts.load('700 64px "Baloo Da 2"','জ্ঞানই'),document.fonts.load('400 32px Kalam','Pen')]),new Promise(r=>setTimeout(r,3000))]);}catch(e){}
+  try{await Promise.race([Promise.all([document.fonts.load(`600 64px ${FONT_DISPLAY}`,'আজকের পড়া'),document.fonts.load(`700 64px ${FONT_DISPLAY}`,'হাজিরা'),document.fonts.load(`700 64px ${FONT_UI}`,'জ্ঞানই')]),new Promise(r=>setTimeout(r,3000))]);}catch(e){}
   buildArt();loadNames(); // before the scene, so the board names a renamed Rashed
   if(window.THREE){try{buildScene();v3=new THREE.Vector3();ndc=new THREE.Vector2();}catch(e){has3D=false;}}else has3D=false;
   if(!has3D)G.view='2d';
@@ -68,8 +68,8 @@ async function init(){
     renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();G.glLost=true;if(G.view==='3d'){setView('2d');if(G.matchLive)toast('3D থেমে গেছে','2D-তে খেলা চলছে');}});
     renderer.domElement.addEventListener('webglcontextrestored',()=>{G.glLost=false;});
   }
-  addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(!cam.user)resetCam();}});
-  $('#loading').remove();$('#menu').hidden=false;refreshMenu();drawTableBg();
+  addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(!$('#endScreen').hidden)drawTableBg($('#endbg'));if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(!cam.user)resetCam();}});
+  $('#loading').remove();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();
   requestAnimationFrame(t=>{last=t;frame(t);});
   live.connect();
   // Offline play on the published site. Skipped on file:// and on local servers, so edits show up at once.
