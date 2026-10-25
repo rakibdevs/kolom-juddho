@@ -9,16 +9,27 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
 ## Features
 
 - **Play against Rashed (রাশেদ)**, a CPU opponent who simulates possible shots before choosing one. Three levels: নতুন, মোটামুটি, ওস্তাদ.
-- **Two-player pass-and-play** on one phone or computer.
-- **⚡ সুপার টোকা**: twice per match, arm a super flick. Your pen goes a little faster and hits as if much heavier, then brakes on impact, so it knocks the other pen away while staying on the table. Only human players get it.
-- **Four 90s pens**, drawn in the shapes and colours of the real pens, each in four colours to pick from, with its own speed, weight and grip:
+- **Two-player pass-and-play** on one phone or computer, with your own names (remembered on that device).
+- **⚡ সুপার টোকা**: win a round to earn one super flick for that match, then arm it on any turn. Your pen goes a little faster and hits as if much heavier, then brakes on impact, so it knocks the other pen away while staying on the table. Only human players get it.
+- **Eight school pens**, drawn in the shapes, colours and proportions of the real pens, each in four colours, with its own speed, weight and grip:
   - Econo DX: light and quick
-  - Matador Pinpoint: balanced
-  - Matador Hi-School: rubber grip, hard to push
+  - Matador Pin-Point: bright barrel, clear cap and needle tip, balanced
+  - Matador Hi-School: see-through coloured barrel and chrome tip, steady
+  - Linc Pentonic: slim black barrel, light
+  - Cello Gripper: clear barrel and rubber grip
+  - RFL Good Luck: the local fine ball, frosted barrel, quick
   - Hero Fountain Pen: heavy metal tank
+  - Hero 616: steel cap, steady
+- **Pick your pen**: any pen in any colour, as often as you like. Against the computer, Rashed gets a random pen. Pens are fixed once a match starts.
+- **Rename anyone**: your name, Rashed's, or both players' in two-player mode.
+- **Challenge links**: after a match, send a friend a link. They play the computer playing as you, with your pen at your level, and can send a challenge back. Nothing goes to a server; it's all in the link.
 - **3D and 2D views** that share the same physics. You can switch between them mid-match.
 - Real 2D rigid-body physics: off-centre hits make the pen spin, and heavier pens hit harder.
-- **Share your result** as an image: the last frame of the match on a chalkboard card, through your phone's share sheet or as a PNG download.
+- **Post your result to Facebook** as a photo: a result card with the score, both pens and a photo of the final table. On phones the share sheet opens the Facebook app with the photo in a new post; on desktop the photo is saved, a caption is copied and Facebook opens so you can attach it. You can also just save the image.
+- **The tiffin bell**: a brass hand-bell rings at the start and end of a match, made in code. Phones also buzz on flicks, hits and falls.
+- **Rashed talks back** in a speech bubble: he taunts, grumbles at your ⚡ and gloats when he knocks you off.
+- **A ghost hand** shows the press-and-pull on your first visit.
+- **Works offline** once you've played: install it to your home screen like an app.
 - Bangla interface, works with touch and mouse, light and dark mode.
 - Plain HTML, CSS and JS files with no build step.
 
@@ -74,23 +85,27 @@ Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` 
 │   ├── config.js              # Constants, pen catalogue (PENS), game state
 │   ├── physics.js             # 2D rigid-body physics
 │   ├── cpu.js                 # Rashed, the CPU player
-│   ├── sound.js               # Web Audio sounds
+│   ├── sound.js               # Web Audio sounds, bell, haptics
 │   ├── art.js                 # Canvas textures and Sir's table
 │   ├── scene3d.js             # three.js classroom and pen meshes
 │   ├── render2d.js            # Top-down 2D view
-│   ├── flow.js                # Turns, rounds, HUD
+│   ├── flow.js                # Turns, rounds, HUD, Rashed's speech bubble
+│   ├── tutorial.js            # First-flick ghost hand
 │   ├── menu.js                # Home screen
 │   ├── share.js               # Result image
+│   ├── challenge.js           # Challenge links
 │   ├── input.js               # Pointer input
 │   └── main.js                # Game loop and boot
 ├── assets/                    # Icons and og-image.png (link preview)
 ├── tools/og-image.html        # Redraws og-image.png with the game's code
 ├── manifest.webmanifest       # Install name, colours and icons
+├── sw.js                      # Service worker for offline play
 ├── robots.txt, sitemap.xml    # For search engines
 ├── .nojekyll                  # Tells Pages to serve files as-is
 ├── .github/workflows/pages.yml
 ├── LICENSE                    # MIT
 ├── CONTRIBUTING.md            # How to add a pen, test and send a change
+├── docs/ROADMAP.md            # Gaps and the plan for what to build next
 ├── AGENTS.md                  # Instructions for AI coding agents
 ├── CLAUDE.md                  # Points Claude Code to AGENTS.md
 └── README.md
@@ -102,14 +117,15 @@ The scripts are classic `<script>` files that share globals, so the game still r
 
 - [three.js r128](https://threejs.org/), loaded from cdnjs, for the 3D view
 - Canvas 2D for the top-down view
-- Web Audio for the flick, hit and fall sounds, generated in code with no audio files
-- Google Fonts: Anek Bangla (interface), Atma (chalk and handwriting) and Kalam (English handwriting)
+- Web Audio for every sound (flicks, hits, falls and the bell), generated in code with no audio files
+- A service worker for offline play
+- Google Fonts: Baloo Da 2 (interface), Atma (chalk and handwriting) and Kalam (English handwriting)
 
 All textures (the blackboard, wood, cement floor, village mural, wall charts and notice board) are drawn in code at runtime. The only image files are the icons and the link preview in `assets/`, which the game itself never loads.
 
 ## Credits and note
 
-This is a fan-made nostalgia project. The pens are drawn from memory in the shapes and colours of pens many of us carried in school. The names and designs belong to their makers: Econo (Econo DX), Matador (Matador Pinpoint and Hi-School) and Hero (Hero Fountain Pen). No logos are used, and this project is not affiliated with or endorsed by any pen manufacturer. The same note is shown on the home screen.
+This is a fan-made nostalgia project. The pens are drawn from product photos and memory in the shapes and colours of pens many of us carried in school. The names and designs belong to their makers: Econo (Econo DX), Matador (Matador Pin-Point and Hi-School), Linc (Linc Pentonic), Cello (Cello Gripper), RFL (RFL Good Luck) and Hero (Hero Fountain Pen and Hero 616). No logos are used, and this project is not affiliated with or endorsed by any pen manufacturer. The same note is shown on the home screen.
 
 ## License
 

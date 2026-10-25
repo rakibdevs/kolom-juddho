@@ -62,7 +62,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700&family=Atma:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;500;600;700;800&family=Atma:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -83,13 +83,15 @@
   <div class="pcard p2" id="card1"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
 </div>
 <div id="hint" hidden></div>
+<div id="bubble" hidden aria-live="polite"></div>
+<div id="tutor" hidden aria-hidden="true"><span class="hand">👆</span></div>
 <div id="tools" hidden>
   <button id="bView" aria-label="Switch between 2D and 3D" title="2D / 3D">2D</button>
   <button id="bCam" aria-label="Reset camera" title="Reset camera">🎥</button>
   <button id="bMute" aria-label="Sound on or off" title="Sound">🔊</button>
   <button id="bMenu" aria-label="Open home screen" title="Home">☰</button>
 </div>
-<button id="bSuper" hidden aria-pressed="false" aria-label="সুপার টোকা: পরের টোকা অনেক জোরে যাবে"><span class="ic" aria-hidden="true">⚡</span><span class="lb">সুপার টোকা</span><b>২</b></button>
+<button id="bSuper" hidden aria-pressed="false" aria-label="সুপার টোকা: পরের টোকা অনেক জোরে যাবে"><span class="ic" aria-hidden="true">⚡</span><span class="lb">সুপার টোকা</span><b>০</b></button>
 <div id="toast"><div class="big"></div><div class="small"></div></div>
 
 <!-- Home -->
@@ -97,74 +99,112 @@
   <canvas id="tablebg" aria-hidden="true"></canvas>
   <div class="tableshade" aria-hidden="true"></div>
   <div class="home">
-    <header class="hero">
-      <div class="date" id="boardDate"></div>
-      <h1>কলম যুদ্ধ</h1>
-      <div class="en">Pen fight on Sir’s table</div>
-      <div class="challenge" id="challenge"></div>
+    <header class="topbar">
+      <span class="datepill" id="boardDate"></span>
+      <nav class="toplinks" aria-label="আরও">
+        <button data-sheet="rules">📖 নিয়ম</button>
+        <button data-sheet="memories">💭 মনে পড়ে?</button>
+        <button data-sheet="credits" aria-label="কৃতজ্ঞতা">ⓘ</button>
+      </nav>
     </header>
 
-    <section class="panel">
-      <div class="step"><span class="num">১</span><h2>কার সাথে খেলবে?</h2></div>
-      <div class="tiles" id="segMode">
-        <button class="tile" data-v="cpu"><span class="ic">🧑‍🎓</span><span><span class="t">রাশেদের সাথে</span><span class="d">পাশের বেঞ্চের রাশেদ, কম্পিউটার চালিত</span></span></button>
-        <button class="tile" data-v="2p"><span class="ic">👥</span><span><span class="t">দুই বন্ধু মিলে</span><span class="d">একই ফোন বা কম্পিউটারে পালা করে</span></span></button>
-      </div>
+    <div class="stage">
+      <header class="hero">
+        <div class="bell">🔔 টিফিনের ঘণ্টা পড়েছে!</div>
+        <h1>কলম যুদ্ধ</h1>
+        <div class="en">Pen fight on Sir’s table</div>
+        <div class="challenge" id="challenge"></div>
+      </header>
 
-      <div class="group" id="diffGroup">
-        <div class="step"><span class="num">২</span><h2>রাশেদ কতটা পাকা?</h2></div>
-        <div class="tiles three" id="segDiff">
-          <button class="tile" data-v="easy">নতুন</button>
-          <button class="tile" data-v="medium">মোটামুটি</button>
-          <button class="tile" data-v="hard">ওস্তাদ</button>
+      <section class="panel match" id="setup" aria-label="আজকের লড়াই">
+        <div class="chbanner" id="chBanner" hidden role="status">
+          <b id="chTitle"></b><span id="chText"></span>
+          <button class="linkbtn" id="bDropCh">চ্যালেঞ্জ বাদ দাও</button>
         </div>
-      </div>
-
-      <div class="group">
-        <div class="step"><span class="num" id="numView">৩</span><h2>কীভাবে দেখবে?</h2></div>
-        <div class="tiles" id="segView">
-          <button class="tile" data-v="3d"><span class="ic">🏫</span><span><span class="t">3D ক্লাসরুম</span><span class="d" id="d3">বোর্ড, বেঞ্চ, পাখা — চারপাশ ঘুরে দেখো</span></span></button>
-          <button class="tile" data-v="2d"><span class="ic">🔲</span><span><span class="t">2D টেবিল</span><span class="d">উপর থেকে দেখা, পরিষ্কার আর পুরনো ফোনেও চলে</span></span></button>
+        <div class="seg tabs" id="segMode" role="group" aria-label="কার সাথে খেলবে">
+          <button data-v="cpu" id="modeCpu">🧑‍🎓 রাশেদের সাথে</button>
+          <button data-v="2p">👥 দুই বন্ধু মিলে</button>
         </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="step"><span class="num" id="numPen">৪</span><h2>কলম আর রং বাছাই করো</h2></div>
-      <div class="pickhead"><span class="sw" style="background:var(--p1)"></span><span id="lab1"></span></div>
-      <div class="pengrid" id="grid1"></div>
-      <div class="swatches" role="group" aria-label="তোমার কলমের রং"></div>
-      <div class="pickhead"><span class="sw" style="background:var(--p2)"></span><span id="lab2"></span></div>
-      <div class="pengrid opp" id="grid2"></div>
-      <div class="swatches opp" role="group" aria-label="প্রতিপক্ষের কলমের রং"></div>
-
-      <details>
-        <summary>কীভাবে খেলবে</summary>
-        <p>নিজের কলমের যে জায়গায় টোকা দিতে চাও, সেখানে চেপে ধরে উল্টো দিকে টানো, তারপর ছেড়ে দাও — ঠিক গুলতির মতো। যত বেশি টানবে, তত জোরে যাবে।</p>
-        <p>কলমের মাঝখানে মারলে সোজা যায়, মাথার দিকে মারলে ঘুরতে ঘুরতে যায়। বন্ধুর কলম টেবিল থেকে ফেলে দিলে রাউন্ড তোমার, কিন্তু নিজের কলম পড়ে গেলে রাউন্ড হার। আগে ৩ রাউন্ড জিতলেই চ্যাম্পিয়ন।</p>
-        <p>প্রতি ম্যাচে দুবার ⚡ সুপার টোকা পাবে। টোকা দেওয়ার আগে নিচের ⚡ বোতাম চাপো: কলম ভারী হয়ে জোরে ছুটবে, ধাক্কা দিয়ে বন্ধুর কলম ছিটকে দেবে, আর নিজে সেখানেই থেমে যাবে। তবে না লাগলে কিন্তু নিজের কলমও গড়িয়ে পড়তে পারে!</p>
-      <p>3D-তে ফাঁকা জায়গায় টেনে ক্লাসরুম ঘোরাও, স্ক্রল বা পিঞ্চ করে জুম করো। খেলার মাঝে নিচের বোতাম দিয়ে 2D/3D বদলাতে পারবে।</p>
-      </details>
-    </section>
-
-    <footer class="credits">
-      <h2>কৃতজ্ঞতা</h2>
-      <p>কলমগুলোর নাম, চেহারা আর রং আসল কলমের স্মৃতি থেকে আঁকা। নাম ও ডিজাইনের সব কৃতিত্ব তাদের নির্মাতাদের:</p>
-      <ul id="penCredits"></ul>
-      <p>এটা ছোটবেলার স্মৃতি নিয়ে ভক্তদের বানানো একটা খেলা। কোনো কলম কোম্পানির সাথে এর সম্পর্ক নেই, তাদের অনুমোদনও নেই। সব ট্রেডমার্ক তাদের নিজ নিজ মালিকের।</p>
-      <div class="ghrow">
-        <a class="gh" href="https://github.com/rakibdevs/kolom-juddho" target="_blank" rel="noopener">
-          <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          <span>GitHub-এ ⭐ স্টার দাও</span>
-        </a>
-        <span class="ghnote">খেলাটা ভালো লাগলে স্টার দিয়ে পাশে থাকো। কোড খোলা, চাইলে নতুন কলম বা ফিচারও যোগ করতে পারো।</span>
-      </div>
-      <p class="tech">3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> · ফন্ট: Anek Bangla, Atma, Kalam (Google Fonts)</p>
-    </footer>
+        <div class="vs" id="vs">
+          <div class="side p1">
+            <div class="who"><span class="lab" id="lab1"></span><input class="nm" id="name1" maxlength="20" autocomplete="off" enterkeyhint="next" placeholder="প্লেয়ার ১" aria-label="প্লেয়ার ১-এর নাম"></div>
+            <div class="show" id="show1"></div>
+            <div class="pickrow"><div class="swatches" id="sw1" role="group" aria-label="কলমের রং"></div><div class="pdots" id="grid1" role="group" aria-label="কলম বাছাই"></div></div>
+          </div>
+          <div class="vsbadge" aria-hidden="true">বনাম</div>
+          <div class="side p2">
+            <div class="who"><span class="lab" id="lab2"></span><input class="nm" id="name2" maxlength="20" autocomplete="off" enterkeyhint="done" placeholder="প্লেয়ার ২" aria-label="প্লেয়ার ২-এর নাম"></div>
+            <div class="show" id="show2"></div>
+            <div class="opt" id="diffGroup"><span class="optl" id="diffLabel">রাশেদ কতটা পাকা?</span>
+              <div class="seg" id="segDiff" role="group" aria-label="রাশেদ কতটা পাকা"><button data-v="easy">নতুন</button><button data-v="medium">মোটামুটি</button><button data-v="hard">ওস্তাদ</button></div></div>
+            <div class="pickrow"><div class="swatches" id="sw2" role="group" aria-label="কলমের রং"></div><div class="pdots" id="grid2" role="group" aria-label="কলম বাছাই"></div></div>
+          </div>
+        </div>
+        <p class="locknote" id="lockNote" hidden>🔒 ম্যাচ চলছে, তাই কলম আর মোড বদলানো যাবে না। <button class="linkbtn" id="bEndMatch">ম্যাচ ছেড়ে নতুন করে সাজাও</button></p>
+        <div class="opts">
+          <div class="opt"><span class="optl">কীভাবে দেখবে?</span>
+            <div class="seg" id="segView" role="group" aria-label="কীভাবে দেখবে"><button data-v="3d">🏫 3D</button><button data-v="2d">🔲 2D</button></div></div>
+        </div>
+        <div class="go">
+          <button class="ghost" id="bResume" hidden>খেলায় ফিরে যাও</button>
+          <button class="primary" id="bStart">▶ খেলা শুরু করো</button>
+        </div>
+      </section>
+    </div>
   </div>
-  <div class="startbar">
-    <button class="ghost" id="bResume" hidden>খেলায় ফিরে যাও</button>
-    <button class="primary" id="bStart">খেলা শুরু করো</button>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheetbg" data-close></div>
+    <div class="sheetcard" role="dialog" aria-modal="true" aria-label="আরও">
+      <div class="sheethead">
+        <div class="seg" id="segSheet" role="tablist">
+          <button data-v="rules" role="tab">📖 নিয়ম</button>
+          <button data-v="memories" role="tab">💭 মনে পড়ে?</button>
+          <button data-v="credits" role="tab">ⓘ কৃতজ্ঞতা</button>
+        </div>
+        <button class="close" data-close aria-label="বন্ধ করো">✕</button>
+      </div>
+      <div class="sheetbody">
+        <section data-tab="rules">
+          <h2>কীভাবে খেলবে</h2>
+          <ol class="steps">
+            <li><span class="si" aria-hidden="true">👆</span><div><b>চেপে ধরো</b><span>নিজের কলমের যেখানে টোকা দিতে চাও</span></div></li>
+            <li><span class="si" aria-hidden="true">↩️</span><div><b>পেছনে টানো</b><span>গুলতির মতো, যত টানবে তত জোর</span></div></li>
+            <li><span class="si" aria-hidden="true">💥</span><div><b>ছেড়ে দাও</b><span>বন্ধুর কলম টেবিলের বাইরে!</span></div></li>
+          </ol>
+          <ul class="rules">
+            <li>কলমের মাঝখানে মারলে সোজা যায়, মাথার দিকে মারলে ঘুরতে ঘুরতে যায়।</li>
+            <li>নিজের কলম পড়ে গেলে রাউন্ড হার। আগে ৩ রাউন্ড জিতলেই চ্যাম্পিয়ন।</li>
+            <li>🖊️ যার যেটা পছন্দ সেই কলম নাও; কম্পিউটার নিজের মতো একটা কলম নিয়ে আসবে। ম্যাচ শুরু হলে কলম আর বদলানো যায় না।</li>
+            <li>⚡ একটা রাউন্ড জিতলেই সুপার টোকা, ম্যাচে একবার: কলম ভারী হয়ে ছোটে, ধাক্কা দিয়েই থেমে যায়। না লাগলে কিন্তু নিজের কলমও গড়িয়ে পড়তে পারে!</li>
+            <li>3D-তে ফাঁকা জায়গায় টেনে ক্লাসরুম ঘোরাও, স্ক্রল বা পিঞ্চ করে জুম করো। খেলার মাঝেও 2D/3D বদলানো যায়।</li>
+          </ul>
+        </section>
+        <section data-tab="memories">
+          <h2>মনে পড়ে?</h2>
+          <div class="chits">
+            <p class="chit"><span class="ce" aria-hidden="true">🔔</span>ঘণ্টা পড়লেই টিফিন, আর টিফিন মানেই বেঞ্চে কলম যুদ্ধ।</p>
+            <p class="chit"><span class="ce" aria-hidden="true">🖊️</span>কলমের ক্যাপ চিবিয়ে চ্যাপ্টা, কালি শেষ হলে রিফিলে ফুঁ।</p>
+            <p class="chit"><span class="ce" aria-hidden="true">🤫</span>দরজায় পায়ের শব্দ, “স্যার আসছে!” — সব কলম চোখের পলকে পকেটে।</p>
+            <p class="chit"><span class="ce" aria-hidden="true">📒</span>খাতার শেষ পাতায় কাটাকুটি, বেঞ্চে খোদাই করা নাম।</p>
+          </div>
+        </section>
+        <section data-tab="credits" class="credits">
+          <h2>কৃতজ্ঞতা</h2>
+          <p>কলমগুলোর নাম, চেহারা আর রং আসল কলমের স্মৃতি থেকে আঁকা। নাম ও ডিজাইনের সব কৃতিত্ব তাদের নির্মাতাদের:</p>
+          <ul id="penCredits"></ul>
+          <p>এটা ছোটবেলার স্মৃতি নিয়ে ভক্তদের বানানো একটা খেলা। কোনো কলম কোম্পানির সাথে এর সম্পর্ক নেই, তাদের অনুমোদনও নেই। সব ট্রেডমার্ক তাদের নিজ নিজ মালিকের।</p>
+          <div class="ghrow">
+            <a class="gh" href="https://github.com/rakibdevs/kolom-juddho" target="_blank" rel="noopener">
+              <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              <span>GitHub-এ ⭐ স্টার দাও</span>
+            </a>
+            <span class="ghnote">খেলাটা ভালো লাগলে স্টার দিয়ে পাশে থাকো। কোড খোলা, চাইলে নতুন কলম বা ফিচারও যোগ করতে পারো।</span>
+          </div>
+          <p class="tech">3D: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> · ফন্ট: Baloo Da 2, Atma, Kalam (Google Fonts)</p>
+        </section>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -174,8 +214,13 @@
     <header class="hero"><h2 class="title" id="endTitle"></h2><div class="challenge" id="endScore"></div></header>
     <p id="endText"></p>
     <img id="shotPreview" alt="ফলাফলের ছবি" hidden>
+    <div class="sharerow">
+      <button class="fb" id="bShare" disabled><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07"/></svg><span>Facebook-এ পোস্ট করো</span></button>
+      <button class="ghost" id="bSave" disabled>⬇ ছবি সেভ করো</button>
+    </div>
+    <button class="chsend" id="bChallenge" hidden><span>বন্ধুকে চ্যালেঞ্জ পাঠাও</span></button>
+    <p class="sharenote" id="shareNote" hidden aria-live="polite"></p>
     <div class="row">
-      <button class="ghost" id="bShare">📸 ছবি শেয়ার করো</button>
       <button class="primary" id="bRematch">আবার খেলো</button>
       <button class="ghost" id="bChange">হোমে ফিরে যাও</button>
     </div>
@@ -191,9 +236,11 @@
 <script src="js/scene3d.js"></script>
 <script src="js/render2d.js"></script>
 <script src="js/flow.js"></script>
+<script src="js/tutorial.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/input.js"></script>
 <script src="js/share.js"></script>
+<script src="js/challenge.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

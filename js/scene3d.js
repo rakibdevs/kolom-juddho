@@ -40,6 +40,9 @@ function chalkText(g,txt,x,y,size,color,align){
   for(let k=0;k<4;k++){g.globalAlpha=.22;g.fillText(txt,x+(Math.random()-.5)*3,y+(Math.random()-.5)*3);}
   g.globalAlpha=.85;g.fillText(txt,x,y);g.globalAlpha=1;
 }
+// The board names Rashed among the talkers, so it is redrawn when he is renamed.
+let boardTex=null,boardName='';
+function refreshBoard(){if(!boardTex||boardName===rival())return;boardName=rival();boardTex.image=boardCanvas();boardTex.needsUpdate=true;}
 function boardCanvas(){
   return mkCanvas(2048,626,(g,w,h)=>{
     g.fillStyle='#1f2b25';g.fillRect(0,0,w,h);
@@ -55,7 +58,7 @@ function boardCanvas(){
     chalkText(g,'স্যার আসার আগেই খেলা শেষ!',w/2,470,56,'#f3e58c','center');
     chalkText(g,'১২ × ১২ = ১৪৪',70,500,44);
     chalkText(g,'a² + b² = c²',70,566,44);
-    chalkText(g,'যারা কথা বলেছে: রাশেদ, তুহিন, মিতু',w-64,566,40,'#f6b2a8','right');
+    chalkText(g,`যারা কথা বলেছে: ${rival()}, তুহিন, মিতু`,w-64,566,40,'#f6b2a8','right');
   });
 }
 function signCanvas(){return mkCanvas(768,160,(g,w,h)=>{g.fillStyle='#f3ead0';g.fillRect(0,0,w,h);g.strokeStyle='#1f5a3a';g.lineWidth=10;g.strokeRect(8,8,w-16,h-16);g.fillStyle='#1f5a3a';g.font=`700 80px ${FONT_UI}`;g.textAlign='center';g.textBaseline='middle';g.fillText('জ্ঞানই শক্তি',w/2,h/2+6);});}
@@ -309,7 +312,8 @@ function buildScene(){
   [[-29.6,24],[-29.6,44],[29.6,32]].forEach(([x,z])=>{box(.4,.35,8.6,mat(0xdedad0),x+(x<0?-.15:.15),24,z,false);const t=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,8,12),tubeM);t.rotation.x=Math.PI/2;t.position.set(x+(x<0?.3:-.3),23.8,z);scene.add(t);});
   const wood=mat(0xffffff,{map:tex(ART.darkWood)});
   box(38.4,13.4,.4,wood,0,15,-11.85,false);
-  const board=new THREE.Mesh(new THREE.PlaneGeometry(36,11),mat(0xffffff,{map:tex(boardCanvas()),roughness:.95}));board.position.set(0,15,-11.6);scene.add(board);
+  boardTex=tex(boardCanvas());boardName=rival();
+  const board=new THREE.Mesh(new THREE.PlaneGeometry(36,11),mat(0xffffff,{map:boardTex,roughness:.95}));board.position.set(0,15,-11.6);scene.add(board);
   box(36.4,.35,.9,wood,0,9.35,-11.3,true);
   [[-12,0xf8f6ee],[-11.3,0xf4d35e],[-10.7,0xf8f6ee],[-9.9,0xe88fa1]].forEach(([x,c],i)=>{const ch=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1,10),mat(c));ch.rotation.z=Math.PI/2;ch.rotation.y=i*.3;ch.position.set(x,9.65,-11.2);ch.castShadow=true;scene.add(ch);});
   box(2.4,.7,1.0,mat(0x8a5a30),10,9.88,-11.25);box(2.4,.25,1.02,mat(0x3c3c44),10,9.5,-11.25);
@@ -370,32 +374,50 @@ function buildScene(){
 }
 // Same parts and proportions as drawPen2D: tip at -L/2, posted cap at +L/2.
 function labelCanvas(txt,ink){return mkCanvas(512,64,g=>{g.font=`700 46px ${FONT_UI}`;g.textAlign='center';g.textBaseline='middle';g.fillStyle=ink;g.fillText(txt,256,36,480);});}
+// A capped pen, front (cap) towards -x, built to match drawPen2D: barrel (opaque, see-through with the refill
+// inside, or six-sided), rubber grip, print, end plug, then the cap (lathe-turned with a domed top), lip ring
+// and clip. Under a clear cap the grip, cone and tip show through.
 function makePenMesh(d){
   const outer=new THREE.Group(),inner=new THREE.Group();outer.add(inner);
-  const L=d.L,r=d.r;
-  const add=(geo,m,x,y)=>{const me=new THREE.Mesh(geo,m);me.position.set(x,y||0,0);me.castShadow=true;me.receiveShadow=true;inner.add(me);return me;};
-  const cyl=(rad,len,seg)=>{const g=new THREE.CylinderGeometry(rad,rad,len,seg||24);g.rotateZ(Math.PI/2);return g;};
+  const L=d.L,r=d.r,xf=-L/2,xb=L/2,capLen=L*(d.capLen||.3),lip=xf+capLen,rc=r*1.12;
+  const endLen=L*(d.endLen||.035),b0=lip-r*.6,b1=xb-endLen,grip=d.rubber?L*.2:0;
+  const add=(geo,m,x,y)=>{const me=new THREE.Mesh(geo,m);me.position.set(x,y||0,0);me.castShadow=!m.transparent;me.receiveShadow=true;inner.add(me);return me;};
+  const cyl=(r0,len,seg,r1)=>{const g=new THREE.CylinderGeometry(r0,r1==null?r0:r1,len,seg||24);g.rotateZ(Math.PI/2);return g;}; // r0 at -x, r1 at +x
   const std=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.32},o||{}));
-  const tl=L*(d.nib?.13:.1),capLen=L*.34,x0=-L/2+tl,x1=L/2-capLen,nose=d.nose?L*.07:0,grip=d.rubber?L*.2:0,bodyLen=x1-x0;
-  const metal=std(d.tip,{metalness:.85,roughness:.28});
-  if(d.nib){
-    const nb=new THREE.ConeGeometry(r*.95,tl,24);nb.scale(.35,1,1);nb.rotateZ(Math.PI/2);add(nb,metal,-L/2+tl/2,-r*.15);
-    add(cyl(r*.55,tl*.7),std(0x111111),-L/2+tl*.65,-r*.35);
-  } else {const cone=new THREE.ConeGeometry(r*.85,tl,24);cone.rotateZ(Math.PI/2);add(cone,metal,-L/2+tl/2);}
+  const clear=(c,op)=>std(c,{transparent:true,opacity:op,roughness:.12,depthWrite:false});
+  const metal=c=>std(c,{metalness:.6,roughness:.25});
+  // barrel and what is inside it
   const seg=d.hex?6:24;
-  if(d.clear){add(cyl(r,bodyLen,seg),std(d.body,{transparent:true,opacity:.5,roughness:.15,flatShading:!!d.hex}),(x0+x1)/2);add(cyl(r*.32,bodyLen*.95),std(d.ink,{roughness:.4}),(x0+x1)/2);}
-  else add(cyl(r,bodyLen,seg),std(d.body,{flatShading:!!d.hex}),(x0+x1)/2);
-  if(d.nose)add(cyl(r*1.03,nose),std(d.nose),x0+nose/2);
-  if(d.rubber)add(cyl(r*1.1,grip),std(d.rubber,{roughness:.95}),x0+grip/2);
-  if(d.label&&!d.clear){
-    const lw=(bodyLen-nose-grip)*.7,lm=new THREE.Mesh(new THREE.PlaneGeometry(lw,r*1.1),new THREE.MeshBasicMaterial({map:tex(labelCanvas(d.label,d.labelInk||'#222')),transparent:true,depthWrite:false}));
-    lm.rotation.x=-Math.PI/2;lm.position.set((x0+nose+grip+x1)/2,r*1.01,0);inner.add(lm);
+  if(d.clear){add(cyl(r,b1-b0,seg),clear(d.body,.55),(b0+b1)/2);add(cyl(r*.2,b1-b0),std(d.ink,{roughness:.4}),(b0+b1)/2);}
+  else add(cyl(r,b1-b0,seg),std(d.body,{flatShading:!!d.hex,roughness:.38}),(b0+b1)/2);
+  if(d.rubber)add(cyl(r*1.06,grip),std(d.rubber,{roughness:.95}),lip+grip/2);
+  if(d.label){
+    const lw=(b1-lip-grip)*.72,lm=new THREE.Mesh(new THREE.PlaneGeometry(lw,r*1.1),new THREE.MeshBasicMaterial({map:tex(labelCanvas(d.label,d.labelInk||'#222')),transparent:true,depthWrite:false}));
+    lm.rotation.x=-Math.PI/2;lm.position.set((lip+grip+b1)/2,r*1.01,0);inner.add(lm);
   }
-  const capM=std(d.cap,{roughness:.3,metalness:d.trim?.3:0});
-  add(cyl(r*1.13,capLen),capM,x1+capLen/2);add(cyl(r*.95,L*.02),capM,L/2+L*.01);
-  const clipM=d.trim?std(d.trim,{metalness:.9,roughness:.25}):d.clip&&d.clip!==d.cap?std(d.clip,{metalness:.5,roughness:.35}):std(d.cap,{roughness:.2});
-  add(new THREE.BoxGeometry(capLen*.8,r*.25,r*.4),clipM,x1+capLen*.55,r*1.13+r*.12);
-  if(d.trim){add(cyl(r*1.17,L*.025),clipM,x1+L*.012);add(cyl(r*.5,L*.02),clipM,L/2+L*.025);}
+  // end plug with a rounded end
+  const ec=d.end||d.cap||d.body,em=d.capMetal&&ec===d.cap?metal(ec):d.capClear&&ec===d.cap?clear(ec,.6):std(ec);
+  add(cyl(r*.97,endLen),em,b1+endLen/2);const dome=new THREE.SphereGeometry(r*.97,20,10,0,Math.PI*2,0,Math.PI/2);dome.scale(1,.35,1);dome.rotateZ(-Math.PI/2);add(dome,em,xb);
+  if(d.trim)add(cyl(r*1.02,L*.018),metal(d.trim),b1+L*.009);
+  // under a clear cap: grip section, cone and tip
+  if(d.capClear){
+    const nl=L*(d.noseLen||.13),nx=lip-nl,cone=L*.04,nm=d.noseClear?clear(d.nose,.7):std(d.nose||d.rubber||d.body);
+    add(cyl(r*.62,nl,24,r*.9),nm,nx+nl/2);if(d.noseClear)add(cyl(r*.15,nl),std(d.ink),nx+nl/2);
+    add(cyl(r*.12,cone,24,r*.62),metal(d.tip||'#b8bcc2'),nx-cone/2);add(cyl(r*.08,L*.025),metal(d.tip||'#9aa0a8'),nx-cone-L*.0125);
+  }
+  // the cap: a lathe profile from the lip (open end) to the domed top
+  const pts=[];pts.push(new THREE.Vector2(rc,0));pts.push(new THREE.Vector2(rc,capLen-rc*.9));
+  for(let i=1;i<=8;i++){const t=i/8*Math.PI/2;pts.push(new THREE.Vector2(rc*Math.cos(t),capLen-rc*.9+rc*.9*Math.sin(t)));}
+  const capGeo=new THREE.LatheGeometry(pts,28);capGeo.rotateZ(Math.PI/2); // its axis now runs towards -x
+  const capM=d.capMetal?std(d.cap,{metalness:.4,roughness:.3}): // brushed steel; the scene has no environment map to reflect
+    d.capClear?clear(d.cap,.35):std(d.cap,{roughness:.3});
+  capM.side=THREE.DoubleSide;add(capGeo,capM,lip);
+  const ring=d.trim||d.capRing;if(ring)add(cyl(rc*1.03,L*.022),metal(ring),lip-L*.011);
+  // clip along the top of the cap, ending in a bead
+  const cc=d.trim||d.clip||d.cap,c0=xf+L*.035,c1=xf+L*(d.clipLen||.27);
+  const cm=d.trim?metal(cc):d.capMetal?std(cc,{metalness:.5,roughness:.3}):d.capClear?clear(cc,.6):std(cc,{roughness:.25});
+  add(new THREE.BoxGeometry(c1-c0,r*.22,r*.42),cm,(c0+c1)/2,rc+r*.13);
+  add(new THREE.SphereGeometry(r*.24,12,8),cm,c1-r*.15,rc+r*.18);
   scene.add(outer);return {outer,inner};
 }
 function makeRing(color){

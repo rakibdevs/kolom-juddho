@@ -1,4 +1,4 @@
-// Result card: a photo of the final table with the score, shared as a JPEG or downloaded.
+// Result card: a photo of the final table with the score, posted to Facebook or saved as a JPEG.
 "use strict";
 
 let shotBlob=null,shotURL=null;
@@ -85,23 +85,35 @@ function drawResultCard(view,w){
 
 // Called by matchOver with the winner. Takes the photo now, then builds the card once fonts are ready.
 async function prepareShare(w){
-  const view=grabView(),btn=$('#bShare'),img=$('#shotPreview');
-  shotBlob=null;btn.disabled=true;btn.textContent='📸 ছবি শেয়ার করো';img.hidden=true;
+  const view=grabView(),btns=[$('#bShare'),$('#bSave')],img=$('#shotPreview');
+  shotBlob=null;btns.forEach(b=>b.disabled=true);img.hidden=true;shareNote('');
   try{await Promise.race([Promise.all([document.fonts.load('400 24px Kalam'),document.fonts.load('700 92px Atma','তুমি'),document.fonts.load(`700 36px ${FONT_UI}`,'তুমি'),document.fonts.load(`500 22px ${FONT_UI}`,'তুমি')]),new Promise(r=>setTimeout(r,1500))]);}catch(e){}
   const card=drawResultCard(view,w);
   card.toBlob(b=>{
-    if(!b)return;shotBlob=b;btn.disabled=false;
+    if(!b)return;shotBlob=b;btns.forEach(b=>b.disabled=false);
     if(shotURL)URL.revokeObjectURL(shotURL);shotURL=URL.createObjectURL(b);img.src=shotURL;img.hidden=false;
   },'image/jpeg',.9);
 }
 
-// Shares only the image: with text attached, iOS targets such as WhatsApp drop the image.
-// The link is printed on the card. Browsers that cannot share files download it instead.
-async function shareResult(){
+// Facebook takes photos only through its app or a manual upload; websites cannot post one for the player.
+// Phones and tablets: the share sheet hands the photo to the Facebook app, which opens a new photo post.
+// Desktops (whose share sheets have no Facebook): save the photo, copy a caption and open Facebook.
+const canSharePhoto=f=>matchMedia('(pointer:coarse)').matches&&!!navigator.canShare&&navigator.canShare({files:[f]});
+function shareCaption(){const url=shareURL();return `${$('#endTitle').textContent} ${$('#endScore').textContent} — কলম যুদ্ধ${url?` খেলো: https://${url}`:''} #কলমযুদ্ধ`;}
+function shareNote(t){const n=$('#shareNote');n.textContent=t;n.hidden=!t;}
+function saveShot(){if(!shotURL)return;const a=document.createElement('a');a.href=shotURL;a.download='kolom-juddho.jpg';document.body.appendChild(a);a.click();a.remove();}
+async function shareFacebook(){
   if(!shotBlob)return;
   const file=new File([shotBlob],'kolom-juddho.jpg',{type:'image/jpeg'});
-  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return;}}
-  catch(e){if(e.name==='AbortError')return;}
-  const a=document.createElement('a');a.href=shotURL;a.download='kolom-juddho.jpg';document.body.appendChild(a);a.click();a.remove();
-  $('#bShare').textContent='✓ ছবি ডাউনলোড হয়েছে';
+  if(canSharePhoto(file)){
+    // the photo only: with text attached, iOS share targets drop the image
+    shareNote('তালিকা থেকে Facebook বেছে নাও — ছবিসহ নতুন পোস্ট খুলবে।');
+    try{await navigator.share({files:[file]});shareNote('');}
+    catch(e){if(e.name==='AbortError')shareNote('');else{saveShot();shareNote('শেয়ার করা গেল না, ছবিটা ডাউনলোড হয়েছে। Facebook অ্যাপে গিয়ে ছবিটা পোস্ট করো।');}}
+    return;
+  }
+  saveShot();
+  window.open('https://www.facebook.com/','_blank','noopener'); // must open during the click, before any await
+  let copied=false;try{await navigator.clipboard.writeText(shareCaption());copied=true;}catch(e){}
+  shareNote(`ছবিটা ডাউনলোড হয়েছে আর Facebook খুলেছে। সেখানে “Photo/video” চেপে ছবিটা যোগ করো${copied?', ক্যাপশন পেস্ট করো (কপি করা আছে)':''}, তারপর Post চাপো।`);
 }

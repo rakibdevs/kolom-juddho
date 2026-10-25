@@ -18,6 +18,10 @@ Each file in `js/` covers one part of the game. The table in [AGENTS.md](./AGENT
 - don't declare the same top-level name in two files, and
 - at load time, only use names from files that load earlier (inside functions anything goes).
 
+## What to work on
+
+[docs/ROADMAP.md](./docs/ROADMAP.md) lists the gaps we found and a phased plan, with effort sizes. Pick an item, or open an issue to discuss it first.
+
 ## Add a pen or a colour
 
 Everything about a pen is one entry in `PENS` in `js/config.js`: its names, brand, parts, colours and physics stats. The 3D view, the 2D view, the home screen, the credits and the share card all read from it. Draw pens from their shapes and colours only, with no logos, and put the brand name in `brand` and, if you like, `label`.

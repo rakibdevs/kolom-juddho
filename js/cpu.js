@@ -12,7 +12,7 @@ function simulate(me,s,ang,power){
   return -edgeDist(B)*10+edgeDist(A)*4;
 }
 function planShot(me){
-  const cfg={easy:{n:12,noise:.22,pn:.25},medium:{n:45,noise:.08,pn:.12},hard:{n:150,noise:.025,pn:.05}}[G.diff];
+  const cfg={easy:{n:12,noise:.22,pn:.25},medium:{n:45,noise:.08,pn:.12},hard:{n:150,noise:.025,pn:.05}}[level()];
   const A=pens[me],B=pens[1-me];let best=null,bs=-1e9;
   for(let i=0;i<cfg.n;i++){
     const s=(Math.random()-.5)*A.L*.9,cx=A.x+Math.cos(A.a)*s,cz=A.z+Math.sin(A.a)*s;

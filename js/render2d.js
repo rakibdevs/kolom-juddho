@@ -26,37 +26,61 @@ function screenToWorld(sx,sy){
 }
 // Draws a pen lying along +x with the tip at -L/2 and the posted cap at +L/2, in world units.
 // The home screen, the share card and the 2D view all use it.
+// A part shaded like a cylinder seen from above: dark edges, a highlight band towards the light (top).
+function cylGrad(g,c,R,gloss){
+  const gr=g.createLinearGradient(0,-R,0,R),k=gloss?.65:.32;
+  gr.addColorStop(0,mixHex(c,'#000000',.35));gr.addColorStop(.2,mixHex(c,'#ffffff',k));gr.addColorStop(.38,c);
+  gr.addColorStop(.8,mixHex(c,'#000000',.18));gr.addColorStop(1,mixHex(c,'#000000',.5));return gr;
+}
+// A capped pen lying on the table, front (cap) at -L/2: the barrel with its print and end plug, then the cap
+// with its domed top, lip ring and clip. Under a clear cap the grip, cone and tip show through.
 function drawPen2D(g,p){
   const d=p.def;let sc=1,alpha=1,onTable=true;
   if(p.falling){const k=clamp((TOP+p.r-p.falling.y)/TOP,0,1);sc=1-.3*k;alpha=1-.35*k;onTable=false;}
-  const L=d.L,R=d.r*2.3,tl=L*(d.nib?.13:.1),capLen=L*.34,x0=-L/2+tl,x1=L/2-capLen,nose=d.nose?L*.07:0,grip=d.rubber?L*.2:0;
+  // pens are drawn 1.6x wider than real so they stay readable from above, yet keep a slim pen shape
+  const L=d.L,R=d.r*PEN_W2D,xf=-L/2,xb=L/2,capLen=L*(d.capLen||.3),lip=xf+capLen,Rc=R*1.12;
+  const endLen=L*(d.endLen||.035),b0=lip-R*.6,b1=xb-endLen,grip=d.rubber?L*.2:0;
+  const fill=(c,a)=>{g.globalAlpha=alpha*(a==null?1:a);g.fill();g.globalAlpha=alpha;};
   g.save();g.translate(p.x,p.z);g.rotate(p.a);g.scale(sc,sc);g.globalAlpha=alpha;
-  if(onTable){g.fillStyle='rgba(0,0,0,.32)';rr(g,-L/2+.06,-R+.1,L,2*R,R);g.fill();}
-  else{g.fillStyle='rgba(0,0,0,.2)';rr(g,-L/2+.03,-R+.05,L,2*R,R);g.fill();}
-  // tip: a ballpoint cone, or a fountain nib with its slit
-  g.fillStyle=d.tip;g.beginPath();
-  if(d.nib){g.moveTo(-L/2,0);g.quadraticCurveTo(-L/2+tl*.45,-R*1.05,x0,-R*.8);g.lineTo(x0,R*.8);g.quadraticCurveTo(-L/2+tl*.45,R*1.05,-L/2,0);g.fill();
-    g.strokeStyle='rgba(0,0,0,.6)';g.lineWidth=.012;g.beginPath();g.moveTo(-L/2,0);g.lineTo(-L/2+tl*.6,0);g.stroke();g.fillStyle='rgba(0,0,0,.6)';g.beginPath();g.arc(-L/2+tl*.62,0,.014,0,7);g.fill();}
-  else{g.moveTo(-L/2,0);g.lineTo(x0,-R*.85);g.lineTo(x0,R*.85);g.closePath();g.fill();}
-  // barrel
-  g.fillStyle=d.body;g.globalAlpha=alpha*(d.clear?.75:1);g.fillRect(x0,-R,x1-x0+.02,2*R);g.globalAlpha=alpha;
-  if(d.clear){g.fillStyle=d.ink;g.fillRect(x0+nose,-R*.3,x1-x0-nose,R*.6);}
-  if(d.hex){g.strokeStyle='rgba(0,0,0,.2)';g.lineWidth=.012;[-.55,.55].forEach(k=>{g.beginPath();g.moveTo(x0,R*k);g.lineTo(x1,R*k);g.stroke();});}
-  if(d.nose){g.fillStyle=d.nose;g.fillRect(x0,-R*1.02,nose,R*2.04);}
-  if(d.rubber){g.fillStyle=d.rubber;g.fillRect(x0,-R*1.08,grip,R*2.16);g.strokeStyle='rgba(255,255,255,.1)';g.lineWidth=.01;for(let x=x0+grip/8;x<x0+grip;x+=grip/8){g.beginPath();g.moveTo(x,-R*1.08);g.lineTo(x,R*1.08);g.stroke();}}
+  g.fillStyle=onTable?'rgba(0,0,0,.24)':'rgba(0,0,0,.15)';rr(g,xf+.04,-R*1.05+.06,L,2*R*1.1,R);g.fill();
+  // barrel: opaque, frosted see-through (refill inside), or six-sided
+  g.fillStyle=cylGrad(g,d.body,R,d.clear);g.beginPath();g.rect(b0,-R,b1-b0,2*R);fill(d.body,d.clear?.62:1);
+  if(d.clear){g.fillStyle=d.ink;g.beginPath();g.rect(b0,-R*.2,b1-b0,R*.4);fill(d.ink,.55);}
+  if(d.hex){g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=R*.08;[-.5,.5].forEach(k=>{g.beginPath();g.moveTo(b0,R*k);g.lineTo(b1,R*k);g.stroke();});}
+  if(d.rubber){
+    g.fillStyle=cylGrad(g,d.rubber,R*1.05);g.beginPath();g.rect(lip,-R*1.05,grip,R*2.1);g.fill();
+    g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=R*.07;for(let x=lip+grip/9;x<lip+grip;x+=grip/9){g.beginPath();g.moveTo(x,-R);g.lineTo(x,R);g.stroke();}
+  }
   if(d.label){
     // text is drawn at 250x and scaled down, because tiny font sizes render badly
-    const lx=(x0+nose+grip+x1)/2,k=.004;g.save();g.translate(lx,0);g.scale(k,k);
-    g.font=`700 ${R*.9/k}px ${FONT_UI}`;g.textAlign='center';g.textBaseline='middle';
-    g.fillStyle=d.labelInk||'#222';g.globalAlpha=alpha*.85;g.fillText(d.label,0,R*.08/k,(x1-x0-nose-grip)*.8/k);g.restore();
+    const lx=(lip+grip+b1)/2,k=.004;g.save();g.translate(lx,0);g.scale(k,k);
+    g.font=`700 ${R*.82/k}px ${FONT_UI}`;g.textAlign='center';g.textBaseline='middle';
+    g.fillStyle=d.labelInk||'#222';g.globalAlpha=alpha*.9;g.fillText(d.label,0,R*.06/k,(b1-lip-grip)*.82/k);g.restore();
   }
-  // posted cap with clip and trim band
-  g.fillStyle=d.cap;rr(g,x1,-R*1.13,capLen,R*2.26,R*.9);g.fill();
-  g.fillStyle=d.trim||d.clip||'rgba(255,255,255,.35)';rr(g,x1+capLen*.12,-R*.28,capLen*.74,R*.56,R*.2);g.fill();
-  g.fillStyle='rgba(255,255,255,.3)';g.fillRect(x1+capLen*.14,-R*.22,capLen*.68,R*.12);
-  if(d.trim){g.fillStyle=d.trim;g.fillRect(x1-.01,-R*1.16,.035,R*2.32);g.fillRect(L/2-.03,-R*.7,.03,R*1.4);}
-  g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=R*.28;g.beginPath();g.moveTo(x0+.03,-R*.6);g.lineTo(L/2-.05,-R*.6);g.stroke();
-  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=.02;rr(g,x0,-R*1.13,L-tl,R*2.26,R*.6);g.stroke();
+  // end plug, with a gold band on trimmed pens
+  const ec=d.end||d.cap||d.body;g.fillStyle=cylGrad(g,ec,R*.96,d.capMetal&&ec===d.cap);rr(g,b1-R*.1,-R*.96,endLen+R*.1,R*1.92,R*.55);fill(ec,d.capClear&&ec===d.cap?.6:1);
+  if(d.trim){g.fillStyle=cylGrad(g,d.trim,R,true);g.fillRect(b1-R*.1,-R,L*.018,2*R);}
+  // under a clear cap: the grip section, the cone and the tip
+  if(d.capClear){
+    const nl=L*(d.noseLen||.13),nx=lip-nl,cone=L*.04;
+    g.fillStyle=cylGrad(g,d.nose||d.rubber||d.body,R*.9);g.beginPath();g.moveTo(lip,-R*.9);g.lineTo(nx,-R*.62);g.lineTo(nx,R*.62);g.lineTo(lip,R*.9);g.closePath();fill(null,d.noseClear?.7:1);
+    if(d.noseClear){g.fillStyle=d.ink;g.fillRect(nx,-R*.16,nl,R*.32);}
+    g.fillStyle=cylGrad(g,d.tip||'#b8bcc2',R*.6,true);g.beginPath();g.moveTo(nx,-R*.62);g.lineTo(nx-cone,-R*.14);g.lineTo(nx-cone,R*.14);g.lineTo(nx,R*.62);g.closePath();g.fill();
+    g.strokeStyle=d.tip||'#9aa0a8';g.lineWidth=R*.16;g.beginPath();g.moveTo(nx-cone,0);g.lineTo(nx-cone-L*.025,0);g.stroke();
+  }
+  // the cap: domed top, straight sides, square lip
+  const capPath=()=>{g.beginPath();g.moveTo(lip,-Rc);g.lineTo(xf+Rc,-Rc);g.quadraticCurveTo(xf,-Rc,xf,0);g.quadraticCurveTo(xf,Rc,xf+Rc,Rc);g.lineTo(lip,Rc);g.closePath();};
+  g.fillStyle=cylGrad(g,d.cap,Rc,d.capMetal||d.capClear);capPath();fill(d.cap,d.capClear?.38:1);
+  if(d.capClear){g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=R*.12;capPath();g.stroke();}
+  const ring=d.trim||d.capRing;
+  if(ring){g.fillStyle=cylGrad(g,ring,Rc*1.02,true);g.fillRect(lip-L*.022,-Rc*1.02,L*.022,Rc*2.04);}
+  // clip: a strip along the cap from near its top, ending in a small bead
+  const cc=d.trim||d.clip||d.cap,c0=xf+L*.035,c1=xf+L*(d.clipLen||.27),cw=R*.42;
+  g.fillStyle='rgba(0,0,0,.22)';rr(g,c0,-cw/2+R*.12,c1-c0,cw,cw/2);g.fill();
+  g.fillStyle=cylGrad(g,cc,cw/2,d.capMetal||!!d.trim);g.save();g.translate(0,0);rr(g,c0,-cw/2,c1-c0,cw,cw/2);fill(cc,d.capClear?.6:1);g.restore();
+  g.fillStyle=cylGrad(g,cc,cw*.6,true);g.beginPath();g.arc(c1-cw*.4,0,cw*.6,0,7);fill(cc,d.capClear?.6:1);
+  // outline, so light pens stand out on the table
+  g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=R*.07;capPath();g.stroke();g.beginPath();g.rect(lip,-R,b1-lip,2*R);g.stroke();
   g.restore();
 }
 function draw2D(now,W,H,shot){

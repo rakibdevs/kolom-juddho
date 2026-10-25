@@ -42,16 +42,17 @@ function frame(now){
     if(meshes[i]){const inn=meshes[i].inner;inn.rotation.x+=f.roll*dt;inn.rotation.z+=f.tiltV*dt;}
     p.a+=f.roll*.08*dt;
     const onDais=Math.abs(p.x)<23&&p.z<5&&p.z>-12,fl=(onDais?DAIS:0)+p.r;
-    if(f.y<=fl){f.y=fl;f.done=true;if(meshes[i])meshes[i].inner.rotation.z=0;snap(.7,1300,.12,900);setTimeout(()=>snap(.35,1800,.08),110);}
+    if(f.y<=fl){f.y=fl;f.done=true;if(meshes[i])meshes[i].inner.rotation.z=0;snap(.7,1300,.12,900);setTimeout(()=>snap(.35,1800,.08),110);buzz([30,40,20]);}
   });
   if(!$('#menu').hidden||!$('#endScreen').hidden)return;
+  tutor.place();
   if(G.view==='3d'&&has3D&&!G.glLost)sync3D(now);else draw2D(now);
 }
 
 /* ================= boot ================= */
 async function init(){
-  try{await Promise.race([Promise.all([document.fonts.load('600 64px Atma','আজকের পড়া'),document.fonts.load('700 64px Atma','হাজিরা'),document.fonts.load('700 64px "Anek Bangla"','জ্ঞানই'),document.fonts.load('400 32px Kalam','Pen')]),new Promise(r=>setTimeout(r,3000))]);}catch(e){}
-  buildArt();
+  try{await Promise.race([Promise.all([document.fonts.load('600 64px Atma','আজকের পড়া'),document.fonts.load('700 64px Atma','হাজিরা'),document.fonts.load('700 64px "Baloo Da 2"','জ্ঞানই'),document.fonts.load('400 32px Kalam','Pen')]),new Promise(r=>setTimeout(r,3000))]);}catch(e){}
+  buildArt();loadNames(); // before the scene, so the board names a renamed Rashed
   if(window.THREE){try{buildScene();v3=new THREE.Vector3();ndc=new THREE.Vector2();}catch(e){has3D=false;}}else has3D=false;
   if(!has3D)G.view='2d';
   wireMenu();
@@ -70,5 +71,7 @@ async function init(){
   addEventListener('resize',()=>{if(!$('#menu').hidden){drawTableBg();refreshMenu();}if(has3D){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(!cam.user)resetCam();}});
   $('#loading').remove();$('#menu').hidden=false;refreshMenu();drawTableBg();
   requestAnimationFrame(t=>{last=t;frame(t);});
+  // Offline play on the published site. Skipped on file:// and on local servers, so edits show up at once.
+  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 init();
