@@ -7,7 +7,10 @@ const isCPU=i=>G.mode==='cpu'&&i===1;
 // If a challenge comes from someone with the player's own name (say, opening your own link), the player is তুমি.
 const sameAsChallenger=()=>!!(G.challenge&&G.names[0]&&G.names[0].toLowerCase()===G.challenge.from.toLowerCase());
 function who(i){
-  if(G.mode==='online')return i===G.seat?G.names[0]||'তুমি':(G.peer&&G.peer.name)||'বন্ধু';
+  if(G.mode==='online'){
+    const friend=(G.peer&&G.peer.name)||'বন্ধু';
+    return i!==G.seat?friend:G.names[0]&&G.names[0]!==friend?G.names[0]:'তুমি'; // two players with one name: you are তুমি
+  }
   return G.mode==='cpu'?(i===0?(sameAsChallenger()?'তুমি':G.names[0]||'তুমি'):`${rival()} (CPU)`):(G.names[i]||(i===0?'প্লেয়ার ১':'প্লেয়ার ২'));}
 function setView(v){
   if(v==='3d'&&(!has3D||G.glLost))v='2d';

@@ -10,29 +10,46 @@ function penThumb(cv,d){
   g.setTransform(dpr*k,0,0,dpr*k,dpr*W/2,dpr*H/2);drawPen2D(g,{def:d,x:-.03,z:-.03,a:0});
 }
 const statRow=(l,v)=>`<div class="stat">${l}<b><i style="width:${Math.round(clamp(v,.08,1)*100)}%"></i></b></div>`;
-// One side of the match card: a ◀ pen ▶ carousel with the pen's name, tag and stats, colour dots, and one
-// small dot per pen to jump straight to it. Against the computer its side shows the rival and his difficulty (and his pen mid-match).
+// Two pens crossed like swords beside the title: the player's pen and the one it will most likely meet.
+function drawHeroPens(){
+  const cv=$('#heroPens');if(!cv||!cv.clientWidth)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2),W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const mine=penDef(G.p1,G.c1),other=G.mode==='2p'?penDef(G.p2,G.c2):penDef(G.p1==='pinpoint'?'hischool':'pinpoint','');
+  // chalk action lines round the crossing
+  g.strokeStyle='rgba(244,242,234,.7)';g.lineWidth=Math.max(1.5,W/90);g.lineCap='round';
+  [-2.75,-2.45,-2.15,-.95,-.65,-.35,.35,.65,2.5,2.8].forEach(t=>{const r0=Math.min(W,H)*.36,r1=Math.min(W,H)*.48;
+    g.beginPath();g.moveTo(W/2+Math.cos(t)*r0,H/2+Math.sin(t)*r0);g.lineTo(W/2+Math.cos(t)*r1,H/2+Math.sin(t)*r1);g.stroke();});
+  [[other,.62],[mine,-.62]].forEach(([d,a])=>{
+    const k=Math.min(W,H*1.25)*.82/d.L;
+    g.save();g.translate(W/2,H/2);g.rotate(a);g.scale(k,k);
+    g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=14;g.shadowOffsetY=6;
+    drawPen2D(g,{def:d,x:0,z:0,a:0});g.restore();
+  });
+}
+// One side of the match card: a ◀ pen ▶ carousel (or a swipe) with the pen's name, tag and stats, and colour dots.
+// Against the computer its side shows the rival and his difficulty, plus his pen mid-match or in a challenge;
+// online it shows the friend (their pen once they join) and the room.
 // PENS is trusted static data, so it may go into innerHTML; player names never do.
 const SIDES=[['p1','c1'],['p2','c2']];
 // Rebuilding a side replaces its buttons, so give focus back to the one the player just used.
 function refocus(sel){const el=$(sel);if(el&&!el.disabled)el.focus({preventScroll:true});}
 function buildSide(i){
-  const [key,ck]=SIDES[i],n=i+1,show=$('#show'+n),dots=$('#grid'+n),sw=$('#sw'+n);
+  const [key,ck]=SIDES[i],n=i+1,show=$('#show'+n),sw=$('#sw'+n);
   const lock=G.matchLive,rivalSide=G.mode!=='2p'&&i===1; // pens are fixed once a match starts
-  show.closest('.side').classList.toggle('rival',rivalSide);dots.innerHTML='';sw.innerHTML='';
+  show.closest('.side').classList.toggle('rival',rivalSide);sw.innerHTML='';
   if(rivalSide&&G.mode==='online'){
     // the friend's side: their pen once they have joined (sent with their hello), names as text only
     const f=lock?pens[1-G.seat].def:G.peer?penDef(G.peer.pen,G.peer.col):null;
-    show.innerHTML=f?`<canvas class="big" aria-hidden="true"></canvas><div class="pn">${f.name}</div><div class="pcol"></div>`
-      :`<div class="avatar" aria-hidden="true">🌐</div><div class="pn">বন্ধু আসবে লিংকে</div><div class="pcol">বন্ধু যোগ দিলে এখানে তার কলম দেখা যাবে</div>`;
+    show.innerHTML=f?`<canvas class="big" aria-hidden="true"></canvas><div class="pn">${f.name}</div><div class="pcol"></div>`:'';
     if(f){penThumb(show.querySelector('canvas'),f);show.querySelector('.pcol').textContent=`${f.colorBn} · ${poss(who(1-G.seat))} কলম`;}
     return;
   }
   if(rivalSide){
     // the computer's pen is picked at random when the match starts (cpuPen); during a match, show it
     const p=lock&&pens[1]?pens[1].def:G.challenge?challengePen():null;
-    show.innerHTML=p?`<canvas class="big" aria-hidden="true"></canvas><div class="pn">${p.name}</div><div class="pcol"></div>`
-      :`<div class="avatar" aria-hidden="true">🧑‍🎓</div><div class="pn">লড়াইয়ের জন্য তৈরি</div><div class="pcol">নিজের কলম নিয়ে আসবে — দেখা যাক কোনটা!</div>`;
+    show.innerHTML=p?`<canvas class="big" aria-hidden="true"></canvas><div class="pn">${p.name}</div><div class="pcol"></div>`:'<div class="ghostpen"><b aria-hidden="true">?</b><span>চমক কলম · খেলা শুরু হলে দেখবে</span></div>'; // otherwise his pen is a surprise
     if(p){penThumb(show.querySelector('canvas'),p);show.querySelector('.pcol').textContent=`${p.colorBn} · ${poss(rival())} কলম`;} // the name may come from a link: text only
     return;
   }
@@ -48,10 +65,6 @@ function buildSide(i){
   let x0=null;
   cv.onpointerdown=e=>{x0=e.clientX;};
   cv.onpointerup=e=>{if(x0===null)return;const dx=e.clientX-x0;x0=null;if(Math.abs(dx)>30)step(dx<0?1:-1);};
-  PENS.forEach((b,j)=>{
-    const c=document.createElement('button');c.className='pdot';c.setAttribute('aria-pressed',j===k);c.setAttribute('aria-label',b.name);c.title=b.name;c.disabled=lock;
-    c.onclick=()=>pick(b.id,`#grid${n} .pdot:nth-child(${j+1})`);dots.appendChild(c);
-  });
   d.colors.forEach(([id,bn,hex],j)=>{
     const s=document.createElement('button');s.className='swatch';s.style.background=hex;s.title=bn;
     s.setAttribute('aria-label',`${bn} রং`);s.setAttribute('aria-pressed',d.color===id);s.disabled=lock;
@@ -63,7 +76,7 @@ const SETUP_KEY='kolom-juddho:setup';
 function loadSetup(){
   try{
     const s=JSON.parse(localStorage.getItem(SETUP_KEY)||'{}');
-    if(['cpu','2p'].includes(s.mode))G.mode=s.mode;
+    if(['cpu','2p','online'].includes(s.mode))G.mode=lastMode=s.mode;
     if(['easy','medium','hard'].includes(s.diff))G.diff=s.diff;
     if(s.view==='2d'||(s.view==='3d'&&has3D))G.view=s.view;
     if(typeof s.sir==='boolean')G.sirOn=s.sir;
@@ -115,42 +128,48 @@ function saveNames(){try{localStorage.setItem(NAME_KEY,JSON.stringify({p:G.names
 function pickLabels(){
   const cpu=G.mode==='cpu',r=rival();
   $('#lab1').textContent=sameAsChallenger()?'তুমি':'';$('#lab2').textContent=cpu?'CPU':G.mode==='online'?'অনলাইন':''; // tell two same names apart
-  $('#modeCpu').textContent=`🧑‍🎓 ${poss(r)} সাথে`;
-  $('#diffLabel').textContent=G.challenge?`চ্যালেঞ্জে ${r} এই লেভেলেই খেলবে · বদলাতে চ্যালেঞ্জ বাদ দাও`:`${r} কতটা পাকা?`;$('#segDiff').setAttribute('aria-label',`${r} কতটা পাকা`);
-  $('#challenge').textContent=G.challenge?`${r} তোমাকে চ্যালেঞ্জ পাঠিয়েছে! টিফিন শেষের আগেই জবাব দাও।`:cpu?`${r} তোমাকে চ্যালেঞ্জ করেছে! টিফিন শেষ হওয়ার আগেই জবাব দাও।`:G.mode==='online'?'বন্ধু যেখানেই থাকুক, টেবিল একটাই। স্যার আসার আগেই ফয়সালা।':'দুই বন্ধু, এক টেবিল। স্যার আসার আগেই ফয়সালা।';
+  $('#modeCpu').textContent=`${poss(r)} সাথে`;
+  $('#diffLabel').textContent=G.challenge?'চ্যালেঞ্জের লেভেল':`${r} কতটা পাকা?`;$('#diffGroup').title=G.challenge?`চ্যালেঞ্জে ${r} এই লেভেলেই খেলবে · বদলাতে চ্যালেঞ্জ বাদ দাও`:'';$('#segDiff').setAttribute('aria-label',`${r} কতটা পাকা`);
+  $('#challenge').textContent=G.challenge?`${r} তোমাকে চ্যালেঞ্জ পাঠিয়েছে! টিফিন শেষের আগেই জবাব দাও।`:''; // only for a real challenge
 }
 function syncNameInputs(){
   const cpu=G.mode==='cpu',n1=$('#name1'),n2=$('#name2');
   if(G.mode==='online'){
-    n1.value=G.names[0];n1.placeholder='তুমি';n1.setAttribute('aria-label','তোমার নাম');
-    n2.value=G.peer?G.peer.name:'';n2.readOnly=true;n2.placeholder='বন্ধু';n2.setAttribute('aria-label','বন্ধুর নাম');return; // the friend names themselves
+    n1.value=G.names[0];n1.placeholder='তোমার নাম লেখো…';n1.setAttribute('aria-label','তোমার নাম');
+    // Before anyone joins, the player who opens the room may name the friend (sent in the link). Once the
+    // friend is here, or when this player was invited, the friend's own name shows and can't be edited.
+    const fixed=!!G.peer||online.invitedBy()!==null||G.seat===1&&online.status()!=='idle';
+    n2.value=G.peer?G.peer.name:fixed?online.invitedBy()||'':G.names[1];n2.readOnly=fixed;n2.placeholder=fixed?'বন্ধু':'বন্ধুর নাম (ইচ্ছে হলে)';n2.setAttribute('aria-label','বন্ধুর নাম');return;
   }
-  n1.value=G.names[0];n1.placeholder=cpu?'তুমি':'প্লেয়ার ১';n1.setAttribute('aria-label',cpu?'তোমার নাম':'প্লেয়ার ১-এর নাম');
+  n1.value=G.names[0];n1.placeholder=cpu?'তোমার নাম লেখো…':'প্লেয়ার ১-এর নাম';n1.setAttribute('aria-label',cpu?'তোমার নাম':'প্লেয়ার ১-এর নাম');
   n2.value=cpu?(G.challenge?G.challenge.from:G.rival):G.names[1];n2.readOnly=!!G.challenge;n2.placeholder=cpu?CPU:'প্লেয়ার ২';n2.setAttribute('aria-label',cpu?'কম্পিউটারের নাম':'প্লেয়ার ২-এর নাম');
 }
 function wireNames(){
   [0,1].forEach(i=>{
     const inp=$('#name'+(i+1));
-    inp.oninput=()=>{const v=cleanName(inp.value);if(i===1&&G.mode==='cpu')G.rival=v;else G.names[i]=v;saveNames();pickLabels();};
+    inp.oninput=()=>{if(inp.readOnly)return;const v=cleanName(inp.value);if(i===1&&G.mode==='cpu')G.rival=v;else G.names[i]=v;saveNames();pickLabels();if(G.mode==='online')online.ui();};
     inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(i)inp.blur();else $('#name2').focus();}};
   });
 }
 function syncSeg(id,val){document.querySelectorAll(id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===val));}
 function refreshMenu(){
-  const bd=$('#boardDate'),wd=document.createElement('span');wd.className='wd';wd.textContent=`, ${weekdayBn()}`; // the weekday hides on phones
-  bd.textContent=`তারিখ: ${todayBn()}`;bd.append(wd);
-  syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);syncSeg('#segSir',G.sirOn?'on':'off');syncSeg('#segTiffin',String(G.tiffin));$('#tiffinGroup').hidden=!G.sirOn;
+  $('.home').dataset.step=homeStep; // first, so the pen pictures below are drawn at their visible size
+  syncSeg('#segDiff',level());syncSeg('#segView',G.view);syncSeg('#segSir',G.sirOn?'on':'off');syncSeg('#segTiffin',String(G.tiffin));$('#tiffinGroup').hidden=!G.sirOn;
   const cpu=G.mode==='cpu';
   $('#diffGroup').hidden=!cpu;$('#vs').classList.toggle('twop',!cpu);
   syncNameInputs();pickLabels();buildSide(0);buildSide(1);
-  document.querySelectorAll('#segMode button').forEach(b=>b.disabled=G.matchLive);$('#lockNote').hidden=!G.matchLive;
+  document.querySelectorAll('#modes .mode').forEach(b=>{const on=b.dataset.v===lastMode;b.disabled=G.matchLive;b.classList.toggle('picked',on);b.querySelector('.tag').hidden=!on;});
+  $('#setMode').textContent={cpu:`🪑 ${poss(rival())} সাথে`,'2p':'👥 দুজনে এক ফোনে',online:'🌐 অনলাইনে বন্ধুর সাথে'}[G.mode];
+  $('#head1').textContent=G.mode==='2p'?'প্লেয়ার ১':'তুমি';
+  $('#head2').textContent=cpu?rival():G.mode==='2p'?'প্লেয়ার ২':'বন্ধু'; // names are text only
+  $('#bBack').hidden=G.matchLive;$('#lockNote').hidden=!G.matchLive;
   $('#bResume').hidden=!G.matchLive;
   const net=G.mode==='online',bs=$('#bStart');bs.hidden=net&&G.matchLive;bs.disabled=false; // an online match ends only by leaving it
   bs.textContent=G.matchLive?'▶ নতুন খেলা':G.challenge?'▶ চ্যালেঞ্জ নাও':'▶ খেলা শুরু করো';
   $('#bEndMatch').textContent=net?'ম্যাচ ছেড়ে দাও (বন্ধু জিতে যাবে)':'ম্যাচ ছেড়ে নতুন করে সাজাও';
   online.ui();
   syncChallengeBanner();document.querySelectorAll('#segDiff button').forEach(b=>b.disabled=!!G.challenge);
-  saveSetup();fitHome();
+  saveSetup();fitHome();if(homeStep==='title')drawHeroPens();
 }
 // On wide screens the home screen fits the window: the CSS tightens it on short screens, and if it is still
 // too tall it is zoomed out, but never below 80% so the text stays readable. Phones scroll instead.
@@ -180,18 +199,32 @@ function openSheet(tab){
   $('#sheet').hidden=false;$('.sheetbody').scrollTop=0;$('#sheet .close').focus();
 }
 function closeSheet(){$('#sheet').hidden=true;if(sheetFrom)sheetFrom.focus({preventScroll:true});}
+// The home screen has two steps: 'title' (the chalkboard and who to play) and 'setup' (pens, names and settings
+// for that mode, with ← back). A challenge or invite link, and the menu during a match, open on 'setup'.
+let homeStep='title',lastMode=null;
+function showStep(s){
+  homeStep=s;refreshMenu();$('#menu').scrollTop=0;
+  const f=s==='setup'?$('#bBack'):$(`#modes .mode[data-v="${G.mode}"]`);if(f&&!f.hidden)f.focus({preventScroll:true});
+}
 function openMenu(){
+  homeStep=G.matchLive?'setup':'title';
   if(G.mode==='online'&&G.matchLive){$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;return;} // the match goes on meanwhile
   G.prevState=G.state;if(sir.phase==='warn'){sir.phase='calm';sir.left=SIR_WARN+12;placeSir(-16,false,0);} // a fresh warning after the pause
   G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;}
 function wireMenu(){
   const seg=(id,key,after)=>{$(id).onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;G[key]=b.dataset.v;if(after)after();refreshMenu();};};
-  seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;if(G.mode!=='online')online.leave();}); // two players can't answer a challenge
+  document.querySelectorAll('#modes .mode').forEach(b=>b.onclick=()=>{
+    if(G.matchLive)return;
+    G.mode=b.dataset.v;if(G.mode!=='cpu')G.challenge=null;if(G.mode!=='online')online.leave(); // two players can't answer a challenge
+    showStep('setup');
+  });
+  $('#bBack').onclick=()=>{if(G.matchLive)return;online.leave();showStep('title');}; // backing out of online closes the room
   seg('#segDiff','diff');seg('#segView','view');
   $('#segSir').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.sirOn=b.dataset.v==='on';refreshMenu();};
   $('#segTiffin').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.tiffin=+b.dataset.v;refreshMenu();}; // from the next match
   if(!has3D){const b=document.querySelector('#segView [data-v="3d"]');b.disabled=true;b.textContent='🏫 3D চলবে না';b.title='এই ডিভাইসে 3D চালু করা যায়নি';}
   buildCredits();loadSetup();readChallenge();online.readInvite();online.wire();wireNames();
+  if(G.challenge||online.status()==='invited')homeStep='setup'; // a link goes straight to its setup
   addEventListener('pagehide',online.leave); // closing the tab tells an online friend at once
   $('#sirSays').onclick=()=>sirSays.next();loadStars();
   $('#bDropCh').onclick=dropChallenge;$('#bChallenge').onclick=sendChallenge;
@@ -202,8 +235,8 @@ function wireMenu(){
   $('#sheet').onkeydown=e=>{if(e.key==='Escape'){e.stopPropagation();closeSheet();}};
   $('#bEndMatch').onclick=()=>{if(G.mode==='online'){online.leave();refreshMenu();return;}G.matchLive=false;G.pending=null;G.prevState='menu';live.update();refreshMenu();};
   $('#bShare').onclick=shareFacebook;
-  $('#bSave').onclick=()=>{saveShot();shareNote('ছবিটা ডাউনলোড হয়েছে।');};
-  $('#bStart').onclick=()=>{ensureAudio();if(G.mode==='online'){online.startPressed();refreshMenu();return;}$('#menu').hidden=true;setupMatch();};
+  $('#bSave').onclick=()=>{saveShot();if(!inAppBrowser)shareNote('ছবিটা ডাউনলোড হয়েছে।');};
+  $('#bStart').onclick=()=>{ensureAudio();lastMode=G.mode;if(G.mode==='online'){online.startPressed();refreshMenu();return;}$('#menu').hidden=true;setupMatch();};
   $('#bResume').onclick=()=>{
     $('#menu').hidden=true;setView(G.view);
     if(!G.matchLive||G.mode==='online')return;
@@ -216,5 +249,6 @@ function wireMenu(){
   $('#bSuper').onclick=toggleSuper;
   $('#bView').onclick=()=>setView(G.view==='3d'?'2d':'3d');
   $('#bCam').onclick=resetCam;
-  $('#bMute').onclick=()=>{muted=!muted;$('#bMute').textContent=muted?'🔇':'🔊';};
+  const mute=m=>{muted=m;$('#bMute').textContent=m?'🔇':'🔊';const h=$('#bHomeMute');h.setAttribute('aria-pressed',m);h.classList.toggle('muted',m);};
+  $('#bMute').onclick=()=>mute(!muted);$('#bHomeMute').onclick=()=>{mute(!muted);if(!muted){ensureAudio();bell(false);}}; // the home screen's শব্দ
 }

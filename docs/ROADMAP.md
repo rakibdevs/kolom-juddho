@@ -20,7 +20,7 @@ It must stay one-thumb playable on a cheap phone, Bangla first, offline after th
 
 ## Design principles
 
-1. **One tap to play.** Settings never block the first match.
+1. **Two taps to play.** Pick who to play, then ▶. Settings never block the first match, and the last setup is remembered.
 2. **Every feature triggers a specific memory.** If it doesn't remind someone of school, it waits.
 3. **Short sessions.** A match should take three minutes or less, the length of a tiffin break.
 4. **Bangla first.** Bengali digits, typographic punctuation, and the 90s Dhaka-classroom voice.

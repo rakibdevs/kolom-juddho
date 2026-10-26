@@ -6,11 +6,12 @@ How two friends on different devices play one match of কলম যুদ্ধ
 
 ## What players see
 
-1. On the home screen, the player picks **🌐 অনলাইনে**, their pen and name, then presses **▶ রুম খুলে বন্ধুকে ডাকো**.
-2. They get a link such as `https://kolom.themicly.com/?room=3E29K.<name>` and a **📤 লিংক পাঠাও** button: the share sheet on phones, copy on desktops.
-3. The friend opens the link and sees “রাকিব তোমাকে অনলাইনে খেলতে ডেকেছে!”. They pick a pen and press **▶ যোগ দাও**.
-4. The match starts on both screens. Each player flicks on their own turn and watches the friend's aim arrow and flick on the other.
-5. At the end, **আবার খেলো** starts a rematch once both have pressed it. **হোমে ফিরে যাও** leaves the room.
+1. On the home screen, the player picks **🌐 অনলাইনে**, their pen and name, and can type the friend's name in the friend's card. Then they press **▶ রুম খুলে বন্ধুকে ডাকো**.
+2. The friend's card shows a link such as `https://kolom.themicly.com/?room=3E29K.<your name>.<friend's name>` (names base64url, both optional) and a **📤 পাঠাও** button: the share sheet on phones, copy on desktops.
+3. The friend opens the link and sees “🎯 রাকিব ডেকেছে!”. Their name field is filled with the name from the link, unless their device already has a name of its own. They pick a pen and press **▶ যোগ দাও**.
+4. If the room already has two players, or can't be reached, a popup explains it and offers **▶ নতুন রুম খোলো** (or **↻ আবার চেষ্টা করো**).
+5. The match starts on both screens. Each player flicks on their own turn and watches the friend's aim arrow and flick on the other.
+6. At the end, **আবার খেলো** starts a rematch once both have pressed it. **হোমে ফিরে যাও** leaves the room.
 
 The player who opened the room decides the Sir and tiffin settings. On a portrait phone, each player sees the table from their own end.
 
@@ -67,6 +68,7 @@ Both games run the full match, physics included. These rules keep them identical
 
 ## Trust and safety
 
+- **Names.** The friend's own name (sent in their hello) wins. If they didn't give one, the name the room's opener typed is used, then “বন্ধু”. A link opened on the inviter's own device doesn't reuse the inviter's name for the friend. If both players have the same name, each screen calls its own player “তুমি”.
 - **Checked input.** Everything received is validated before use: numbers are finite and in range, pen ids exist, poses and scores have the right shape, and names go through `cleanName` and are shown only as text.
 - **Cheating.** A modified client could still lie about where the pens stopped. That is acceptable for a game between friends. Making the server authoritative would mean running `physStep` in the Durable Object, which is possible because the physics is plain JavaScript; it is not planned yet.
 - **Privacy.** Nothing is stored or logged. A room only knows two sockets and their seat numbers.

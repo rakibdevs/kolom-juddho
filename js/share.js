@@ -1,7 +1,10 @@
 // Result card: a photo of the final table with the score, posted to Facebook or saved as a JPEG.
 "use strict";
 
-let shotBlob=null,shotURL=null;
+let shotBlob=null,shotURL=null,shotData='';
+// Facebook's, Messenger's and Instagram's built-in browsers ignore downloads and can't share files, but they
+// let a player press and hold an image to save it. There the buttons open the photo with those steps instead.
+const inAppBrowser=/FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram/i.test(navigator.userAgent);
 const CARD_W=1080,CARD_H=1350,SHOT_W=1280,SHOT_H=720;
 const CARD={bg0:'#0d1813',bg1:'#1a2c22',ink:'#f6f4ec',muted:'rgba(246,244,236,.62)',glass:'rgba(255,255,255,.06)',edge:'rgba(255,255,255,.13)',gold:'#f3e58c',p:['#6d8fff','#ff6a5f']};
 
@@ -100,6 +103,8 @@ async function prepareShare(w){
   card.toBlob(b=>{
     if(!b)return;shotBlob=b;btns.forEach(b=>b.disabled=false);
     if(shotURL)URL.revokeObjectURL(shotURL);shotURL=URL.createObjectURL(b);img.src=shotURL;img.hidden=false;
+    // in-app browsers save a long-pressed image only when it is a real data: URL, not a blob: one
+    if(inAppBrowser){const r=new FileReader();r.onload=()=>{shotData=r.result;img.src=shotData;};r.readAsDataURL(b);}
   },'image/jpeg',.9);
 }
 
@@ -109,7 +114,7 @@ async function prepareShare(w){
 const canSharePhoto=f=>matchMedia('(pointer:coarse)').matches&&!!navigator.canShare&&navigator.canShare({files:[f]});
 function shareCaption(){const url=shareURL();return `${$('#endTitle').textContent} স্কোর ${toBn(G.score[0])}–${toBn(G.score[1])} — কলম যুদ্ধ${url?` খেলো: https://${url}`:''} #কলমযুদ্ধ`;}
 function shareNote(t){const n=$('#shareNote');n.textContent=t;n.hidden=!t;}
-function saveShot(){if(!shotURL)return;const a=document.createElement('a');a.href=shotURL;a.download='kolom-juddho.jpg';document.body.appendChild(a);a.click();a.remove();}
+function saveShot(){if(!shotURL)return;if(inAppBrowser){shotSheet(false);return;}const a=document.createElement('a');a.href=shotURL;a.download='kolom-juddho.jpg';document.body.appendChild(a);a.click();a.remove();}
 async function shareFacebook(){
   if(!shotBlob)return;
   const file=new File([shotBlob],'kolom-juddho.jpg',{type:'image/jpeg'});
@@ -117,11 +122,31 @@ async function shareFacebook(){
     // the photo only: with text attached, iOS share targets drop the image
     shareNote('তালিকা থেকে Facebook বেছে নাও — ছবিসহ নতুন পোস্ট খুলবে।');
     try{await navigator.share({files:[file]});shareNote('');}
-    catch(e){if(e.name==='AbortError')shareNote('');else{saveShot();shareNote('শেয়ার করা গেল না, ছবিটা ডাউনলোড হয়েছে। Facebook অ্যাপে গিয়ে ছবিটা পোস্ট করো।');}}
+    catch(e){if(e.name==='AbortError')shareNote('');else if(inAppBrowser){shareNote('');shotSheet(true);}else{saveShot();shareNote('শেয়ার করা গেল না, ছবিটা ডাউনলোড হয়েছে। Facebook অ্যাপে গিয়ে ছবিটা পোস্ট করো।');}}
     return;
   }
+  if(inAppBrowser){shotSheet(true);return;}
   saveShot();
   window.open('https://www.facebook.com/','_blank','noopener'); // must open during the click, before any await
   let copied=false;try{await navigator.clipboard.writeText(shareCaption());copied=true;}catch(e){}
   shareNote(`ছবিটা ডাউনলোড হয়েছে আর Facebook খুলেছে। সেখানে “Photo/video” চেপে ছবিটা যোগ করো${copied?', ক্যাপশন পেস্ট করো (কপি করা আছে)':''}, তারপর Post চাপো।`);
+}
+
+// The photo, full size, with how to save it by pressing and holding (and, for Facebook, how to post it). Also a
+// link post, which needs no saving: Facebook shows the game's link preview.
+function shotSheet(fb){
+  const p=$('#shotPop'),steps=$('#shotSteps'),url=siteBase();
+  $('#shotPopTitle').textContent=fb?'Facebook-এ ছবি পোস্ট করো':'ছবিটা সেভ করো';
+  $('#shotPopImg').src=shotData||shotURL;
+  steps.textContent='';
+  ['ছবিটার ওপর আঙুল চেপে ধরে রাখো, তারপর “Save image” বা “ছবি সেভ করো” বেছে নাও।',
+   fb?'Facebook অ্যাপে নতুন পোস্ট খোলো, সেভ করা ছবিটা যোগ করে পোস্ট করো।':null,
+   'না হলে ওপরের ⋯ মেনু থেকে “Open in browser” (ব্রাউজারে খোলো) চেপে আবার খেলো, সেখানে সরাসরি সেভ হয়।']
+    .filter(Boolean).forEach(t=>{const li=document.createElement('li');li.textContent=t;steps.append(li);});
+  const link=$('#bShotLink');link.hidden=!fb||!url;if(url)link.href=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  $('#bShotCopy').hidden=!fb;$('#bShotCopy').textContent='📋 ক্যাপশন কপি করো';
+  $('#bShotCopy').onclick=async()=>{try{await navigator.clipboard.writeText(shareCaption());$('#bShotCopy').textContent='✓ কপি হয়েছে';}catch(e){$('#bShotCopy').textContent='কপি করা গেল না';}};
+  const close=()=>{p.hidden=true;(fb?$('#bShare'):$('#bSave')).focus({preventScroll:true});};
+  $('#bShotClose').onclick=close;p.onkeydown=e=>{if(e.key==='Escape')close();};
+  p.hidden=false;$('#bShotClose').focus({preventScroll:true});
 }

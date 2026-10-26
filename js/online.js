@@ -1,5 +1,5 @@
-// Online play with a friend. One player opens a room and sends its link (?room=CODE.name); the friend opens it,
-// picks a pen and joins. The Worker's Room (worker/src/index.js) only relays messages between the two games,
+// Online play with a friend. One player opens a room and sends its link (?room=CODE.name.friend, both names
+// base64url and optional); the friend opens it, picks a pen and joins. The Worker's Room (worker/src/index.js) only relays messages between the two games,
 // so both run the same match and keep it the same like this:
 // - the player whose turn it is sends the flick ({t:'shot'}), and both screens play it;
 // - when the pens stop, the shooter sends where they ended and which fell ({t:'rest'}); the other screen takes
@@ -43,7 +43,7 @@ const online=(()=>{
   // A game message: numbered and kept until the friend has surely seen it (the last 64 are plenty for one turn).
   function send(m){m.n=++outN;outbox.push(m);if(outbox.length>64)outbox.shift();raw(m);}
   function fresh(){outN=inN=0;outbox=[];peerId='';me=Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>b.toString(16).padStart(2,'0')).join('');}
-  function fail(){want=false;status='lost';ui();}
+  function fail(){want=false;status='lost';ui();pop('lost');}
   function stop(){want=false;clearTimeout(timer);clearTimeout(goneT);if(ws){const w=ws;ws=null;w.onclose=null;w.close();}peerOn=false;}
 
   /* ---------- room ---------- */
@@ -65,16 +65,22 @@ const online=(()=>{
   // ?room=CODE.name from a friend's link: switch to online play with the invite ready to accept.
   function readInvite(){
     const q=new URLSearchParams(location.search);if(!q.has('room'))return;
-    const [c,name]=(q.get('room')||'').split('.');
-    if(ROOM_RE.test(c||'')){let from='';try{from=cleanName(b64u.dec(name||''));}catch(e){}invite={code:c,from};status='invited';G.mode='online';G.challenge=null;}
+    const [c,name,friend]=(q.get('room')||'').split('.'),dec=v=>{try{return cleanName(b64u.dec(v||''));}catch(e){return '';}};
+    if(ROOM_RE.test(c||'')){
+      const from=dec(name),mine=dec(friend);invite={code:c,from};status='invited';G.mode='online';G.challenge=null;
+      // the name the friend was given in the link, unless this device already has one of its own; never the
+      // inviter's name (a link opened on the inviter's own device)
+      if(mine&&(!G.names[0]||G.names[0]===from))G.names[0]=mine;else if(G.names[0]&&G.names[0]===from)G.names[0]='';
+      saveNames();
+    }
     try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
   }
   function roomURL(){
     const base=/^https?:$/.test(location.protocol)?location.origin+location.pathname:siteBase();
-    return base?`${base}?room=${code}.${b64u.enc(G.names[0]||'')}`:'';
+    return base?`${base}?room=${[code,b64u.enc(G.names[0]||''),b64u.enc(G.names[1]||'')].join('.')}`:'';
   }
   async function shareLink(){
-    const url=roomURL(),text=`${G.names[0]||'তোমার বন্ধু'} তোমাকে কলম যুদ্ধে ডাকছে! 🖊️ লিংকে এসে কলম বেছে যোগ দাও।`;
+    const url=roomURL(),text=`${G.names[1]?`${G.names[1]}, `:''}${G.names[0]||'তোমার বন্ধু'} তোমাকে কলম যুদ্ধে ডাকছে! 🖊️ লিংকে এসে কলম বেছে যোগ দাও।`;
     if(!url)return;
     if(navigator.share&&matchMedia('(pointer:coarse)').matches){try{await navigator.share({title:'কলম যুদ্ধ',text,url});return;}catch(e){if(e.name==='AbortError')return;}}
     try{await navigator.clipboard.writeText(`${text}\n${url}`);$('#netNote').textContent='লিংক কপি হয়েছে। Messenger বা WhatsApp-এ পেস্ট করে পাঠাও।';}
@@ -84,7 +90,7 @@ const online=(()=>{
   /* ---------- messages from the room ---------- */
   function system(m){
     if(m.sys==='seat'){tries=0;if(status==='joining')status='waiting';note('');ui();}
-    else if(m.sys==='full'){want=false;status='full';ui();}
+    else if(m.sys==='full'){stop();status='full';ui();pop('full');}
     else if(m.sys==='peer'){
       peerOn=!!m.on;clearTimeout(goneT);
       if(peerOn){
@@ -108,7 +114,8 @@ const online=(()=>{
           peerId=m.id;inN=0;
         }
         if(Number.isInteger(m.got))outbox.filter(o=>o.n>m.got).forEach(raw); // what they missed while away
-        G.peer={name:cleanName(String(m.name||''))||'বন্ধু',pen:m.pen,col:penDef(m.pen,m.col).color};
+        // the friend's own name, else the one this player gave them when opening the room
+        G.peer={name:cleanName(String(m.name||''))||(G.seat===0&&G.names[1])||'বন্ধু',pen:m.pen,col:penDef(m.pen,m.col).color};
         if(G.seat===0&&status==='open')start(); // the friend is here: the match begins
         ui();break;
       }
@@ -199,13 +206,13 @@ const online=(()=>{
     const show=on()&&!G.matchLive,box=$('#netBox');box.hidden=!show;
     const who=G.peer?G.peer.name:'বন্ধু';
     const txt={
-      idle:'রুম খুললে একটা লিংক পাবে। সেটা বন্ধুকে পাঠাও, সে লিংকে এসে কলম বেছে যোগ দেবে।',
-      open:peerOn?`${who} এসেছে!`:'⏳ বন্ধুর অপেক্ষায়… এই লিংকটা বন্ধুকে পাঠাও:',
-      invited:`🎯 ${invite&&invite.from?invite.from:'তোমার বন্ধু'} তোমাকে অনলাইনে খেলতে ডেকেছে! কলম বেছে “যোগ দাও” চাপো।`,
+      idle:'রুম খোলো, লিংকটা বন্ধুকে পাঠাও।',
+      open:peerOn?`${who} এসেছে!`:'⏳ বন্ধুর অপেক্ষায়… লিংকটা পাঠাও:',
+      invited:`🎯 ${invite&&invite.from?invite.from:'তোমার বন্ধু'} ডেকেছে! নিজের কলম বেছে “যোগ দাও” চাপো।`,
       joining:'⏳ রুমে ঢুকছি…',
-      waiting:peerOn?`⏳ ${who} খেলা শুরু করছে…`:'⏳ যে ডেকেছে সে এখন রুমে নেই। একটু অপেক্ষা করো, নয়তো নিজেই রুম খোলো।',
-      full:'এই রুমে আগেই দুজন আছে। নিজে একটা রুম খুলে বন্ধুকে ডাকো।',
-      lost:'রুমে পৌঁছানো গেল না। ইন্টারনেট দেখে আবার চেষ্টা করো।',
+      waiting:peerOn?`⏳ ${who} খেলা শুরু করছে…`:'⏳ যে ডেকেছে সে এখন রুমে নেই, একটু অপেক্ষা করো।',
+      full:'এই রুমে আগেই দুজন আছে।',
+      lost:'রুমে পৌঁছানো গেল না।',
       over:peerOn?`${who} এখনও রুমে আছে, আবার খেলতে পারো।`:`${who} রুম থেকে চলে গেছে।`,
       play:'',
     }[status]||'';
@@ -227,6 +234,20 @@ const online=(()=>{
     b.disabled=['open','joining','waiting'].includes(status);
     b.textContent=status==='invited'?'▶ যোগ দাও':b.disabled?'⏳ বন্ধুর অপেক্ষায়…':status==='idle'?'▶ রুম খুলে বন্ধুকে ডাকো':'▶ নতুন রুম খোলো';
   }
+  // A popup for a room that can't be joined, with a way forward: open a new room (or try again).
+  function pop(kind){
+    const p=$('#netPop'),full=kind==='full';
+    $('#netPopIcon').textContent=full?'🚪':'📡';
+    $('#netPopTitle').textContent=full?'রুমে আর জায়গা নেই':'রুমে পৌঁছানো গেল না';
+    $('#netPopText').textContent=full?'এই লিংকের রুমে আগেই দুজন খেলছে। নিজে একটা নতুন রুম খুলে বন্ধুকে ডাকো।':'ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করো।';
+    const go=$('#bPopGo'),retry=!full&&status==='lost'&&invite;
+    go.textContent=retry?'↻ আবার চেষ্টা করো':'▶ নতুন রুম খোলো';
+    const close=()=>{p.hidden=true;$('#bStart').focus({preventScroll:true});};
+    go.onclick=()=>{close();if(retry)join();else{invite=null;host();}refreshMenu();};
+    $('#bPopClose').onclick=()=>{close();refreshMenu();};
+    p.onkeydown=e=>{if(e.key==='Escape')close();};
+    p.hidden=false;go.focus();
+  }
   function startPressed(){if(status==='invited')join();else{stop();invite=null;host();}}
   function wire(){
     $('#bNetShare').onclick=shareLink;
@@ -234,5 +255,5 @@ const online=(()=>{
     $('#netUrl').onfocus=e=>e.target.select();
   }
   return {readInvite,wire,ui,syncStart,startPressed,leave,canEnd,turnStarted,ownsClock,sirCame,shot,aim,over,rematch,
-    ready:()=>!on()||peerOn,status:()=>status};
+    ready:()=>!on()||peerOn,status:()=>status,invitedBy:()=>invite?invite.from:null};
 })();

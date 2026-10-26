@@ -83,6 +83,22 @@
   <div class="pcard p2" id="card1"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
 </div>
 <div id="netHud" hidden role="status"></div>
+<div class="popup" id="shotPop" hidden>
+  <div class="popcard shotcard" role="dialog" aria-modal="true" aria-labelledby="shotPopTitle">
+    <h2 id="shotPopTitle"></h2>
+    <img id="shotPopImg" alt="ফলাফলের ছবি">
+    <ol id="shotSteps"></ol>
+    <div class="popbtns col"><a class="fb" id="bShotLink" target="_blank" rel="noopener" hidden>🔗 লিংকটা Facebook-এ শেয়ার করো</a><button class="ghost" id="bShotCopy" hidden></button><button class="ghost" id="bShotClose">বন্ধ করো</button></div>
+  </div>
+</div>
+<div class="popup" id="netPop" hidden>
+  <div class="popcard" role="alertdialog" aria-modal="true" aria-labelledby="netPopTitle" aria-describedby="netPopText">
+    <div class="popicon" id="netPopIcon" aria-hidden="true"></div>
+    <h2 id="netPopTitle"></h2>
+    <p id="netPopText"></p>
+    <div class="popbtns"><button class="ghost" id="bPopClose">বন্ধ করো</button><button class="primary" id="bPopGo"></button></div>
+  </div>
+</div>
 <div id="sirShadow" aria-hidden="true"><svg viewBox="0 0 100 260" preserveAspectRatio="xMinYMax meet"><path d="M50 8c12 0 20 9 20 21s-8 22-20 22-20-10-20-22S38 8 50 8zM26 58h48c8 0 13 6 14 14l6 70c1 7-4 12-10 12h-4l-2 98H64l-6-86h-16l-6 86H22l-2-98h-4c-6 0-11-5-10-12l6-70c1-8 6-14 14-14zM92 150l30 100h-6L86 152z"/></svg></div>
 <div id="hint" hidden></div>
 <div id="bubble" hidden aria-live="polite"></div>
@@ -102,71 +118,97 @@
   <div class="fanshade" aria-hidden="true"></div>
   <div class="tableshade" aria-hidden="true"></div>
   <div class="home">
-    <header class="topbar">
-      <span class="datepill" id="boardDate"></span>
-      <nav class="toplinks" aria-label="আরও">
-        <button data-sheet="rules">📖 নিয়ম</button>
-        <button data-sheet="memories">💭 মনে পড়ে?</button>
-        <button data-sheet="credits" aria-label="কৃতজ্ঞতা">ⓘ</button>
-        <a class="star" id="ghStar" href="https://github.com/rakibdevs/kolom-juddho" target="_blank" rel="noopener" aria-label="GitHub-এ কলম যুদ্ধকে স্টার দাও"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>⭐<span>স্টার দাও</span><b id="ghCount" hidden></b></a>
-      </nav>
-    </header>
-
     <div class="stage">
-      <header class="hero">
-        <div class="bell">🔔 টিফিনের ঘণ্টা পড়েছে!</div>
-        <div class="live" id="live" hidden aria-live="polite"></div>
-        <h1>কলম যুদ্ধ</h1>
-        <div class="en">স্যারের টেবিলে কলমের লড়াই</div>
-        <div class="challenge" id="challenge"></div>
-        <button class="sirsays" id="sirSays" title="আরেকটা শোনো"><span class="sirlab">স্যার বলেন:</span><q id="sirQuote"></q></button>
-      </header>
+      <div class="hero homeboard">
+        <!-- the top of the board: the chalked name, the tiffin bell's plaque and chalk-circle links -->
+        <div class="cbtop">
+          <span class="brand" aria-hidden="true">kolom.</span>
+          <div class="plaque">🔔 টিফিনের ঘণ্টা পড়েছে!</div>
+          <nav class="toplinks" aria-label="আরও">
+            <button data-sheet="rules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7zM14 3v4h4M9.5 11h6M9.5 14h6M9.5 17h4"/></svg><span>নিয়ম</span></button>
+            <button data-sheet="memories"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5a4.5 4.5 0 0 1 .9-8.9 5.5 5.5 0 0 1 10.4 1.7 3.6 3.6 0 0 1-.6 7.2z"/><circle cx="6" cy="20.5" r="1.3"/></svg><span>মনে পড়ে?</span></button>
+            <button class="snd" id="bHomeMute" aria-pressed="false" aria-label="শব্দ বন্ধ বা চালু করো"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path class="on" d="M16 9a4 4 0 0 1 0 6M18.6 6.4a7.6 7.6 0 0 1 0 11.2"/><path class="off" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg><span>শব্দ</span></button>
+            <button data-sheet="credits"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 10.5v7M12 6.8h.01"/></svg><span>তথ্য</span></button>
+            <a class="star" id="ghStar" href="https://github.com/rakibdevs/kolom-juddho" target="_blank" rel="noopener" aria-label="GitHub-এ কলম যুদ্ধকে স্টার দাও"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/></svg><span>স্টার <b id="ghCount" hidden></b></span></a>
+          </nav>
+        </div>
 
-      <section class="panel match" id="setup" aria-label="আজকের লড়াই">
-        <div class="chbanner" id="chBanner" hidden role="status">
-          <b id="chTitle"></b><span id="chText"></span>
-          <button class="linkbtn" id="bDropCh">চ্যালেঞ্জ বাদ দাও</button>
-        </div>
-        <div class="seg tabs" id="segMode" role="group" aria-label="কার সাথে খেলবে">
-          <button data-v="cpu" id="modeCpu">🧑‍🎓 রাশেদের সাথে</button>
-          <button data-v="2p">👥 দুই বন্ধু মিলে</button>
-          <button data-v="online">🌐 অনলাইনে</button>
-        </div>
-        <div class="netbox" id="netBox" hidden role="status">
-          <p id="netText"></p>
-          <div class="netlink" id="netLink" hidden><input id="netUrl" readonly aria-label="রুমের লিংক"><button class="ghost" id="bNetShare">📤 লিংক পাঠাও</button></div>
-          <p class="netnote" id="netNote"></p>
-          <button class="linkbtn" id="bNetCancel" hidden>রুম ছেড়ে দাও</button>
-        </div>
-        <div class="vs" id="vs">
-          <div class="side p1">
-            <div class="who"><span class="lab" id="lab1"></span><input class="nm" id="name1" maxlength="20" autocomplete="off" enterkeyhint="next" placeholder="প্লেয়ার ১" aria-label="প্লেয়ার ১-এর নাম"></div>
-            <div class="show" id="show1"></div>
-            <div class="pickrow"><div class="swatches" id="sw1" role="group" aria-label="কলমের রং"></div><div class="pdots" id="grid1" role="group" aria-label="কলম বাছাই"></div></div>
+        <!-- step 1: the title, chalk doodles, and who to play -->
+        <div class="doodle dl" aria-hidden="true">কলম<br>মানেই<br>বন্ধুত্ব ♡
+          <svg class="plane" viewBox="0 0 60 40"><path d="M2 20L58 4 40 36 30 24zM30 24L58 4"/><path d="M2 30c8 4 14 4 20 0" stroke-dasharray="3 4"/></svg>
+          <svg class="ttt" viewBox="0 0 60 60"><path d="M20 4v52M40 4v52M4 20h52M4 40h52M8 8l8 8M16 8l-8 8M44 24l8 8M52 24l-8 8"/><circle cx="30" cy="30" r="6"/><circle cx="12" cy="50" r="5"/></svg></div>
+        <div class="doodle dr" aria-hidden="true">ভালো<br>কলম<br>কখনো<br>হারে না! <span class="smile">☺</span></div>
+        <header class="titleblock">
+          <div class="titlerow">
+            <h1><span class="w1">কলম</span> <span class="w2">যুদ্ধ</span></h1>
+            <canvas id="heroPens" aria-hidden="true"></canvas>
           </div>
-          <div class="vsbadge" aria-hidden="true">বনাম</div>
-          <div class="side p2">
-            <div class="who"><span class="lab" id="lab2"></span><input class="nm" id="name2" maxlength="20" autocomplete="off" enterkeyhint="done" placeholder="প্লেয়ার ২" aria-label="প্লেয়ার ২-এর নাম"></div>
-            <div class="show" id="show2"></div>
-            <div class="opt" id="diffGroup"><span class="optl" id="diffLabel">রাশেদ কতটা পাকা?</span>
-              <div class="seg" id="segDiff" role="group" aria-label="রাশেদ কতটা পাকা"><button data-v="easy">নতুন</button><button data-v="medium">মোটামুটি</button><button data-v="hard">ওস্তাদ</button></div></div>
-            <div class="pickrow"><div class="swatches" id="sw2" role="group" aria-label="কলমের রং"></div><div class="pdots" id="grid2" role="group" aria-label="কলম বাছাই"></div></div>
+          <svg class="chalkline" viewBox="0 0 400 26" aria-hidden="true"><path d="M6 14C120 4 260 2 394 8"/><path d="M60 22c110-7 210-8 290-4"/></svg>
+          <div class="en">স্যারের টেবিলে কলমের লড়াই</div>
+          <div class="live" id="live" hidden aria-live="polite"></div>
+          <div class="challenge" id="challenge"></div>
+        </header>
+        <section class="modes" id="modes" aria-labelledby="modesHead">
+          <h2 id="modesHead" class="vh">কার সাথে খেলবে?</h2>
+          <button class="mode m-cpu" data-v="cpu"><span class="tag" hidden>👑 নির্বাচিত</span>
+            <svg class="art" viewBox="0 0 160 96" aria-hidden="true"><g stroke="#3a2414" stroke-width="2" stroke-linejoin="round"><rect x="16" y="12" width="34" height="34" rx="4" fill="#8a5428"/><path d="M22 20h22M22 28h22" stroke="#6b3e1c"/><rect x="11" y="48" width="44" height="8" rx="2" fill="#a0652f"/><path d="M15 56v34M51 56v34M22 46v2M44 46v2" fill="none"/><path d="M60 42h90l-9 13H52z" fill="#c48a52"/><rect x="58" y="55" width="80" height="15" fill="#9a6230"/></g><path d="M62 70v22M134 70v22M145 55v37" stroke="#4b4f55" stroke-width="3"/></svg>
+            <b id="modeCpu">রাশেদের সাথে</b><small>কম্পিউটারের সাথে, তিন লেভেলে</small></button>
+          <button class="mode m-2p" data-v="2p"><span class="tag" hidden>👑 নির্বাচিত</span>
+            <svg class="art" viewBox="0 0 160 96" aria-hidden="true"><g stroke="#3a2414" stroke-width="2" stroke-linejoin="round"><rect x="22" y="14" width="30" height="24" rx="3" fill="#8a5428"/><path d="M14 40h48l-6 10H8z" fill="#c48a52"/><rect x="10" y="50" width="44" height="12" fill="#9a6230"/><rect x="100" y="14" width="30" height="24" rx="3" fill="#8a5428"/><path d="M92 40h48l-6 10H86z" fill="#c48a52"/><rect x="88" y="50" width="44" height="12" fill="#9a6230"/></g><path d="M14 62v28M50 62v28M92 62v28M128 62v28" stroke="#4b4f55" stroke-width="3"/></svg>
+            <b>দুজনে এক ফোনে</b><small>একই ফোনে পালা করে টোকা</small></button>
+          <button class="mode m-online" data-v="online"><span class="tag" hidden>👑 নির্বাচিত</span>
+            <svg class="art" viewBox="0 0 160 96" aria-hidden="true"><g stroke="#2b2f36" stroke-width="2" stroke-linejoin="round"><rect x="40" y="8" width="80" height="54" rx="4" fill="#5b6270"/><rect x="46" y="14" width="68" height="42" rx="2" fill="#1f2329"/><path d="M28 64h104l12 16H16z" fill="#a3aab4"/><path d="M66 72h28" stroke="#6b7280"/></g><g fill="none" stroke="#e9eef5" stroke-width="2"><circle cx="80" cy="35" r="14"/><ellipse cx="80" cy="35" rx="6" ry="14"/><path d="M66 35h28M68 28h24M68 42h24"/></g></svg>
+            <b>অনলাইনে বন্ধুর সাথে</b><small>দূরে থাকলেও, লিংক পাঠিয়ে একসাথে</small></button>
+        </section>
+        <button class="sirsays" id="sirSays" title="আরেকটা শোনো"><q id="sirQuote"></q><span class="sirlab">— স্যার</span></button>
+
+        <!-- step 2: setting up the chosen mode on a notebook page -->
+        <section class="match" id="setup" aria-labelledby="setTitle">
+          <div class="sethead"><button class="back" id="bBack" aria-label="ফিরে যাও, অন্য কারও সাথে খেলো">←</button><h2 id="setTitle">খেলা সাজাও</h2><span class="tape" id="setMode"></span></div>
+          <div class="chbanner" id="chBanner" hidden role="status">
+            <b id="chTitle"></b><span id="chText"></span>
+            <button class="linkbtn" id="bDropCh">চ্যালেঞ্জ বাদ দাও</button>
           </div>
-        </div>
-        <p class="locknote" id="lockNote" hidden>🔒 ম্যাচ চলছে, তাই কলম আর মোড বদলানো যাবে না। <button class="linkbtn" id="bEndMatch">ম্যাচ ছেড়ে নতুন করে সাজাও</button></p>
-        <div class="opts">
-          <div class="opt"><span class="optl">🚶 স্যার আসবেন?</span>
-            <div class="seg" id="segSir" role="group" aria-label="খেলার মাঝে স্যার আসবেন কি না"><button data-v="on">হ্যাঁ</button><button data-v="off">না</button></div></div>
-          <div class="opt" id="tiffinGroup"><span class="optl">⏰ টিফিন কত মিনিট?</span>
-            <div class="seg" id="segTiffin" role="group" aria-label="টিফিন কত মিনিট, তারপর স্যার এসে খেলা থামাবেন"><button data-v="1">১</button><button data-v="2">২</button><button data-v="3">৩</button><button data-v="5">৫</button></div></div>
-          <div class="opt"><span class="optl">👀 কীভাবে দেখবে?</span>
-            <div class="seg" id="segView" role="group" aria-label="কীভাবে দেখবে"><button data-v="3d">🏫 3D</button><button data-v="2d">🔲 2D</button></div></div>
-        </div>
-        <div class="go">
-          <button class="ghost" id="bResume" hidden>খেলায় ফিরে যাও</button>
-          <button class="primary" id="bStart">▶ খেলা শুরু করো</button>
-        </div>
-      </section>
+          <div class="paper notebook">
+            <div class="vs" id="vs">
+              <div class="side p1">
+                <div class="sidehead"><b id="head1">তুমি</b><span class="lab" id="lab1"></span></div>
+                <label class="who"><input class="nm" id="name1" maxlength="20" autocomplete="off" enterkeyhint="next" placeholder="তোমার নাম লেখো…" aria-label="তোমার নাম"><span class="pencil" aria-hidden="true">✎</span></label>
+                <div class="show" id="show1"></div>
+                <div class="pickrow"><div class="swatches" id="sw1" role="group" aria-label="কলমের রং"></div></div>
+              </div>
+              <div class="vsbadge" aria-hidden="true"><span>বনাম</span></div>
+              <div class="side p2">
+                <div class="sidehead"><b id="head2">রাশেদ</b><span class="lab" id="lab2"></span></div>
+                <label class="who"><input class="nm" id="name2" maxlength="20" autocomplete="off" enterkeyhint="done" placeholder="প্লেয়ার ২" aria-label="প্লেয়ার ২-এর নাম"><span class="pencil" aria-hidden="true">✎</span></label>
+                <div class="show" id="show2"></div>
+                <div class="opt" id="diffGroup"><span class="optl" id="diffLabel">রাশেদ কতটা পাকা?</span>
+                  <div class="seg" id="segDiff" role="group" aria-label="রাশেদ কতটা পাকা"><button data-v="easy">নতুন</button><button data-v="medium">মোটামুটি</button><button data-v="hard">ওস্তাদ</button></div></div>
+                <div class="netbox" id="netBox" hidden role="status">
+                  <p id="netText"></p>
+                  <div class="netlink" id="netLink" hidden><input id="netUrl" readonly aria-label="রুমের লিংক"><button class="ghost" id="bNetShare">📤 পাঠাও</button></div>
+                  <p class="netnote" id="netNote"></p>
+                  <button class="linkbtn" id="bNetCancel" hidden>রুম ছেড়ে দাও</button>
+                </div>
+                <div class="pickrow"><div class="swatches" id="sw2" role="group" aria-label="কলমের রং"></div></div>
+              </div>
+            </div>
+            <div class="optbar">
+              <div class="opt"><span class="oi" aria-hidden="true">🚶</span><span class="optl">স্যার আসবেন?</span>
+                <div class="seg" id="segSir" role="group" aria-label="খেলার মাঝে স্যার আসবেন কি না"><button data-v="on">হ্যাঁ</button><button data-v="off">না</button></div></div>
+              <div class="opt" id="tiffinGroup"><span class="oi" aria-hidden="true">🔔</span><span class="optl">টিফিন</span>
+                <div class="seg" id="segTiffin" role="group" aria-label="টিফিন কত মিনিট, তারপর স্যার এসে খেলা থামাবেন"><button data-v="1">১</button><button data-v="2">২</button><button data-v="3">৩</button><button data-v="5">৫</button></div></div>
+              <div class="opt"><span class="oi" aria-hidden="true">🧊</span><span class="optl">ভিউ</span>
+                <div class="seg" id="segView" role="group" aria-label="কীভাবে দেখবে"><button data-v="3d">3D</button><button data-v="2d">2D</button></div></div>
+            </div>
+          </div>
+          <p class="locknote" id="lockNote" hidden>🔒 ম্যাচ চলছে, তাই কলম আর মোড বদলানো যাবে না। <button class="linkbtn" id="bEndMatch">ম্যাচ ছেড়ে নতুন করে সাজাও</button></p>
+          <div class="go">
+            <button class="ghost" id="bResume" hidden>খেলায় ফিরে যাও</button>
+            <button class="primary" id="bStart">▶ খেলা শুরু করো</button>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 
