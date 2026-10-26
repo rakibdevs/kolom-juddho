@@ -1,6 +1,9 @@
 // Pointer input: aiming, camera orbit and pinch zoom.
 "use strict";
 
+// Full power needs a 3.5-unit pull on the table and at least PULL_PX on screen, so small screens (where the table
+// is small, 2D on a phone held sideways above all) don't turn a tiny flick into a full-power shot.
+const PULL_PX=170;
 const ptrs=new Map();let aim=null,orbit=null,pinch0=0,v3=null,ndc=null;
 function tablePoint(e){
   if(G.view==='2d'){const r=c2.getBoundingClientRect();return screenToWorld(e.clientX-r.left,e.clientY-r.top);}
@@ -17,7 +20,7 @@ function onDown(e){
   if(G.state==='aim'&&!isCPU(G.turn)){
     const pt=tablePoint(e),p=pens[G.turn];
     const touch=e.pointerType==='touch',tol=G.view==='2d'?Math.max(.6,(touch?34:26)/T2.s):touch?.85:.6;
-    if(pt){const ap=axisPoint(p,pt.x,pt.z);if(ap.d<tol){aim={s:ap.s,cx:ap.px,cz:ap.pz,power:0,dx:0,dz:0};return;}}
+    if(pt){const ap=axisPoint(p,pt.x,pt.z);if(ap.d<tol){aim={s:ap.s,cx:ap.px,cz:ap.pz,sx:e.clientX,sy:e.clientY,power:0,dx:0,dz:0};return;}}
   }
   if(G.view==='3d')orbit={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch};
 }
@@ -27,7 +30,7 @@ function onMove(e){
   if(aim){
     const pt=tablePoint(e);if(!pt)return;
     const px=aim.cx-pt.x,pz=aim.cz-pt.z,l=Math.hypot(px,pz);
-    aim.power=clamp(l/3.5,0,1);if(l>1e-3){aim.dx=px/l;aim.dz=pz/l;}
+    aim.power=clamp(Math.min(l/3.5,Math.hypot(e.clientX-aim.sx,e.clientY-aim.sy)/PULL_PX),0,1);if(l>1e-3){aim.dx=px/l;aim.dz=pz/l;}
     if(aim.power>.04){const sup=G.armed===G.turn;G.aimVis={cx:aim.cx,cz:aim.cz,ang:Math.atan2(aim.dz,aim.dx),power:aim.power,px:pt.x,pz:pt.z,sup};setHint(`${sup?'⚡ ':''}শক্তি ${toBn(Math.round(aim.power*(sup?SUPER.speed:1)*100))}% — ছেড়ে দিলেই টোকা`);}
     else G.aimVis=null;
   } else if(orbit){

@@ -28,10 +28,15 @@ function fitDist(c,yaw,pitch,box){
 }
 // Starting view that fits the table between the HUD and the hint. Portrait screens look along
 // the table's long side from player 1's end, so the table fills the screen and your pen is nearest.
+// On narrow phones that distance can be above the ceiling (camPos would pull the camera in and crop the
+// table), so the camera comes lower until it fits.
 function camHome(){
-  const W=innerWidth,H=innerHeight,portrait=H>W*1.1,yaw=portrait?-Math.PI/2:.12,pitch=portrait?1.0:.82;
+  const W=innerWidth,H=innerHeight,portrait=H>W*1.1,yaw=portrait?-Math.PI/2:.12;
   const c=camera.clone();c.aspect=W/H;c.updateProjectionMatrix();
-  return {yaw,pitch,dist:fitDist(c,yaw,pitch,{x:1-2*14/W,top:1-2*(portrait?124:H<500?60:96)/H,bottom:-1+2*(H<500?52:78)/H})};
+  const box={x:1-2*(portrait?20:14)/W,top:1-2*(portrait?116:H<500?60:96)/H,bottom:-1+2*(H<500?52:78)/H};
+  let pitch=portrait?1.0:.82,dist=fitDist(c,yaw,pitch,box);
+  while(dist*Math.sin(pitch)>ROOM.yMax-TOP-.1&&pitch>.5){pitch-=.03;dist=fitDist(c,yaw,pitch,box);}
+  return {yaw,pitch,dist};
 }
 function resetCam(){if(camera)Object.assign(cam,camHome(),{user:false});}
 function tex(canvas,rep){const t=new THREE.CanvasTexture(canvas);t.anisotropy=8;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t;}

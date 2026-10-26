@@ -212,11 +212,12 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .linkbtn{background:none;border:none;padding:2px 0;font:inherit;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 /* match settings: a small card, one row per setting with the label left and the switch right */
 .opts{display:flex;flex-direction:column;background:var(--page);border:2px solid var(--line);border-radius:var(--r-md);padding:2px 12px}
-.opts .opt{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:8px 0}
+.opts .opt{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:8px 0} /* the label goes above the buttons when they don't fit beside it */
 .opts .opt+.opt{border-top:1px dashed var(--line)}
 .opts .optl{font-size:var(--fs-md);color:var(--ink);white-space:nowrap}
-.opts .opt .seg{flex:0 0 auto;width:auto}
+.opts .opt .seg{flex:0 0 auto;width:auto;margin-left:auto}
 .opts .opt .seg button{min-width:76px;min-height:36px;padding:6px 14px}
+.opts #segTiffin button{min-width:40px;padding:6px 10px}
 .opt{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
 .opt[hidden]{display:none}
 .opt .seg{display:flex}
@@ -365,6 +366,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .swatch{width:30px;height:30px}
   .opts{padding:2px 10px}
   .opts .opt .seg button{min-width:64px;padding:6px 10px}
+  .opts #segTiffin button{min-width:34px;padding:6px 8px}
   .go .primary{font-size:var(--fs-xl);padding:14px 16px}
   .go .ghost{padding:12px;font-size:var(--fs-md)}
   .sheet{padding:0;place-items:end stretch}
@@ -400,9 +402,10 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
 /* the turn pill moves under the score cards when they would touch */
 @media (max-width:420px){
-  .hudmid{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 78px);transform:translateX(-50%);margin:0}
+  .hudmid{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 78px);transform:translateX(-50%);margin:0;flex-direction:row}
   #turn{margin:0}
-  #bubble{top:calc(env(safe-area-inset-top,0px) + 154px);font-size:var(--fs-sm)}
+  #tiffin{font-size:var(--fs-xs);padding:5px 10px}
+  #bubble{top:calc(env(safe-area-inset-top,0px) + 116px);font-size:var(--fs-sm)}
 }
 /* phones held sideways: short screens get a one-line board and tighter HUD */
 @media (max-height:500px) and (orientation:landscape){
@@ -415,8 +418,12 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .hero .bell{font-size:var(--fs-sm)}
   .go .primary{font-size:var(--fs-lg);padding:10px 16px}
   .go .ghost{padding:9px 12px;font-size:var(--fs-md)}
+  .opts .opt .seg button{min-width:56px;padding:6px 10px}
+  .opts #segTiffin button{min-width:34px;padding:6px 8px}
   .pcard{padding:5px 9px}
   .dots{margin-top:3px}
+  .hudmid{flex-direction:row}
+  #turn{padding:5px 12px;font-size:var(--fs-sm)}
   #tools{gap:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
   #tools button{min-width:40px;height:40px;font-size:var(--fs-base)}
   #bSuper{bottom:calc(env(safe-area-inset-bottom,0px) + 8px);min-height:44px}

@@ -11,7 +11,8 @@ function rr(g,x,y,w,h,r){r=Math.min(r,w/2,h/2);g.beginPath();g.moveTo(x+r,y);g.l
 function layout2D(W=innerWidth,H=innerHeight,shot=false){
   const dpr=shot?1:Math.min(window.devicePixelRatio||1,2);
   if(c2.width!==Math.round(W*dpr)||c2.height!==Math.round(H*dpr)){c2.width=Math.round(W*dpr);c2.height=Math.round(H*dpr);}
-  const topRes=shot?16:88,botRes=shot?16:70,H2=H-topRes-botRes,portrait=H2>W*1.05;
+  // phones held sideways have the turn and tiffin pills beside each other at the top; narrow phones have them under the cards
+  const short=H<500&&W>H,topRes=shot?16:short?62:W<=420?114:88,botRes=shot?16:short?54:70,H2=H-topRes-botRes,portrait=H2>W*1.05;
   const s=portrait?Math.min(W/11,H2/17):Math.min(W/17.5,H2/11);
   T2={s,cx:W/2,cy:topRes+H2/2,portrait,dpr};
 }

@@ -1,3 +1,10 @@
+# Link previews on Facebook, Messenger and WhatsApp
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
 User-agent: *
 Allow: /
 Disallow: /tools/

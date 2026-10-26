@@ -59,10 +59,11 @@ function loadSetup(){
     if(['easy','medium','hard'].includes(s.diff))G.diff=s.diff;
     if(s.view==='2d'||(s.view==='3d'&&has3D))G.view=s.view;
     if(typeof s.sir==='boolean')G.sirOn=s.sir;
+    if(TIFFINS.includes(s.tiffin))G.tiffin=s.tiffin;
     SIDES.forEach(([k,ck])=>{if(byId(s[k])){G[k]=s[k];G[ck]=penDef(s[k],s[ck]).color;}});
   }catch(e){}
 }
-function saveSetup(){try{localStorage.setItem(SETUP_KEY,JSON.stringify({mode:G.mode,diff:G.diff,view:G.view,sir:G.sirOn,p1:G.p1,p2:G.p2,c1:G.c1,c2:G.c2}));}catch(e){}}
+function saveSetup(){try{localStorage.setItem(SETUP_KEY,JSON.stringify({mode:G.mode,diff:G.diff,view:G.view,sir:G.sirOn,tiffin:G.tiffin,p1:G.p1,p2:G.p2,c1:G.c1,c2:G.c2}));}catch(e){}}
 // Brand credits come from PENS, so a new pen gets credited automatically.
 function buildCredits(){
   const brands={};PENS.forEach(p=>(brands[p.brand]=brands[p.brand]||[]).push(p.name));
@@ -126,7 +127,7 @@ function syncSeg(id,val){document.querySelectorAll(id+' button').forEach(b=>b.se
 function refreshMenu(){
   const bd=$('#boardDate'),wd=document.createElement('span');wd.className='wd';wd.textContent=`, ${weekdayBn()}`; // the weekday hides on phones
   bd.textContent=`তারিখ: ${todayBn()}`;bd.append(wd);
-  syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);syncSeg('#segSir',G.sirOn?'on':'off');
+  syncSeg('#segMode',G.mode);syncSeg('#segDiff',level());syncSeg('#segView',G.view);syncSeg('#segSir',G.sirOn?'on':'off');syncSeg('#segTiffin',String(G.tiffin));$('#tiffinGroup').hidden=!G.sirOn;
   const cpu=G.mode==='cpu';
   $('#diffGroup').hidden=!cpu;$('#vs').classList.toggle('twop',!cpu);
   syncNameInputs();pickLabels();buildSide(0);buildSide(1);
@@ -171,6 +172,7 @@ function wireMenu(){
   seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;}); // two players can't answer a challenge
   seg('#segDiff','diff');seg('#segView','view');
   $('#segSir').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.sirOn=b.dataset.v==='on';refreshMenu();};
+  $('#segTiffin').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.tiffin=+b.dataset.v;refreshMenu();}; // from the next match
   if(!has3D){const b=document.querySelector('#segView [data-v="3d"]');b.disabled=true;b.textContent='🏫 3D চলবে না';b.title='এই ডিভাইসে 3D চালু করা যায়নি';}
   buildCredits();loadSetup();readChallenge();wireNames();
   $('#sirSays').onclick=()=>sirSays.next();loadStars();
@@ -180,13 +182,15 @@ function wireMenu(){
   $('#segSheet').onclick=e=>{const b=e.target.closest('button');if(b)openSheet(b.dataset.v);};
   document.querySelectorAll('#sheet [data-close]').forEach(b=>b.onclick=closeSheet);
   $('#sheet').onkeydown=e=>{if(e.key==='Escape'){e.stopPropagation();closeSheet();}};
-  $('#bEndMatch').onclick=()=>{G.matchLive=false;G.prevState='menu';live.update();refreshMenu();};
+  $('#bEndMatch').onclick=()=>{G.matchLive=false;G.pending=null;G.prevState='menu';live.update();refreshMenu();};
   $('#bShare').onclick=shareFacebook;
   $('#bSave').onclick=()=>{saveShot();shareNote('ছবিটা ডাউনলোড হয়েছে।');};
   $('#bStart').onclick=()=>{ensureAudio();$('#menu').hidden=true;setupMatch();};
   $('#bResume').onclick=()=>{
     $('#menu').hidden=true;setView(G.view);
-    if(G.matchLive){if(G.prevState==='moving'||G.prevState==='roundover')G.state=G.prevState;else startTurn();}
+    if(!G.matchLive)return;
+    if(['moving','roundover','sirend'].includes(G.prevState))G.state=G.prevState;else startTurn();
+    const p=G.pending;if(p)setTimeout(()=>{if(G.pending===p&&$('#menu').hidden){G.pending=null;p.fn();}},700); // the pause between rounds, cut short by the menu
   };
   $('#bRematch').onclick=()=>{$('#endScreen').hidden=true;setupMatch();};
   $('#bChange').onclick=()=>{$('#endScreen').hidden=true;if(G.challenge){G.challenge=null;refreshBoard();}openMenu();}; // home ends a challenge; আবার খেলো replays it

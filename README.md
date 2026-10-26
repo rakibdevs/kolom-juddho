@@ -29,7 +29,7 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
 - Real 2D rigid-body physics: off-centre hits make the pen spin, and heavier pens hit harder.
 - **Post your result to Facebook** as a photo: a result card with the score, both pens and a photo of the final table. On phones the share sheet opens the Facebook app with the photo in a new post; on desktop the photo is saved, a caption is copied and Facebook opens so you can attach it. You can also just save the image.
 - **The tiffin bell**: a brass hand-bell rings at the start and end of a match, made in code. Phones also buzz on flicks, hits and falls.
-- **স্যার আসছেন!**: a tiffin clock runs down during a match. When Sir's footsteps start, finish the round fast: if he walks in mid-round, both pens are confiscated and the round is replayed. You can switch him off on the home screen.
+- **স্যার আসছেন!**: a tiffin clock (1, 2, 3 or 5 minutes; 2 by default) runs down during a match. When Sir's footsteps start, time is nearly up: when he walks in, the match ends where it stands. Whoever is ahead wins, and a level score is a draw. You can switch him off or set the tiffin length on the home screen.
 - **Rashed talks back** in a speech bubble: he taunts, grumbles at your ⚡ and gloats when he knocks you off.
 - **A ghost hand** shows the press-and-pull on your first visit.
 - **Works offline** once you've played: install it to your home screen like an app.

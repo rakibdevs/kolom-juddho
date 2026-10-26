@@ -43,7 +43,7 @@ function drawResultCard(view,w){
   // background: deep board green with a glow in the winner's colour
   const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,CARD.bg0);bg.addColorStop(1,CARD.bg1);g.fillStyle=bg;g.fillRect(0,0,W,H);
   const glow=(x,y,r,col,a)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col);gr.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=a;g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);g.globalAlpha=1;};
-  glow(mid,330,640,CARD.p[w],.3);glow(mid,1250,520,CARD.gold,.08);
+  glow(mid,330,640,CARD.p[w]||CARD.gold,.3);glow(mid,1250,520,CARD.gold,.08);
   for(let i=0;i<260;i++){g.fillStyle=`rgba(255,255,255,${.02+(i%5)*.006})`;g.fillRect((i*389)%W,(i*571)%H,2,2);}
 
   // header: icon, name and date
