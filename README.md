@@ -23,6 +23,7 @@ If you enjoy the game, please give the repository a star: **[github.com/rakibdev
 - **Pick your pen**: any pen in any colour, as often as you like. Against the computer, Rashed gets a random pen. Pens are fixed once a match starts.
 - **স্যার বলেন**: the chalkboard on the home screen chalks up the things every teacher seemed to say (“ঘণ্টা আমার জন্য পড়ে, তোমাদের জন্য না।”), a new one every few seconds or on a tap. The home screen sits on a classroom wall with a clock that shows the real time.
 - **Rename anyone**: your name, Rashed's, or both players' in two-player mode.
+- **🌐 অনলাইনে**: play a friend on another device. Open a room, send the link, and your friend picks a pen and joins. Both screens play the same table: each flick is sent and replayed, the shooter's screen settles where the pens stopped, and a dropped connection catches up when it comes back. Runs on the same Cloudflare Worker, one small Durable Object per match.
 - **Live player count**: how many people are online and in a match right now, from an optional Cloudflare Worker that stores nothing.
 - **Challenge links**: after a match, send a friend a link. They play the computer playing as you, with your pen at your level, and can send a challenge back. Nothing goes to a server; it's all in the link.
 - **3D and 2D views** that share the same physics. You can switch between them mid-match.
@@ -76,13 +77,14 @@ python3 -m http.server 8000
 
 Go to **Settings → Pages**, choose **Deploy from a branch**, then pick `main` and `/ (root)`. You can delete the `.github` folder if you use this option. With this option, nothing fills in the site address, so replace every `__SITE_URL__` in `index.html`, `robots.txt` and `sitemap.xml` with your live address (no trailing slash), and `__BUILD_DATE__` in `sitemap.xml` with today's date.
 
-## Deploy to Cloudflare (game and live player count)
+## Deploy to Cloudflare (game, live player count and online rooms)
 
-One Worker, `kolom-juddho`, serves the game and the live player count. `wrangler.toml` in the repository root configures it, and `worker/src/index.js` is its code:
+One Worker, `kolom-juddho`, serves the game, the live player count and the rooms for online play. `wrangler.toml` in the repository root configures it, and `worker/src/index.js` is its code:
 
 - **The game files:** served straight from this folder. `.assetsignore` leaves out the docs, tools, the Worker's own code and the large README screenshot.
 - **`__SITE_URL__`:** the page, `sw.js`, `robots.txt` and `sitemap.xml` pass through the Worker, which fills in `__SITE_URL__` with `SITE_URL` (`https://kolom.themicly.com`). It also stamps the deploy into the service worker, so players get every update.
 - **`/live`:** a WebSocket to one Durable Object that counts open games and games in a match. The chalkboard shows **🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন**. It stores nothing and receives only whether a tab is in a match. It runs on the Workers free plan.
+- **`/room/CODE`:** one small Durable Object per online match. It seats the two players and passes their messages between them; it has no game logic and stores nothing. Also on the free plan. How the two screens stay in step is explained in [docs/ONLINE.md](docs/ONLINE.md).
 
 ```bash
 npx wrangler login     # once
@@ -91,7 +93,7 @@ npx wrangler deploy    # from the repository root
 
 The game is then at `https://kolom-juddho.rakib1708.workers.dev`. `LIVE_URL` in `js/config.js` points at its `/live`, so the count works on every copy of the game whose address is listed in `ALLOWED_ORIGINS`. Set `LIVE_URL` to `''` to turn the count off.
 
-To try it locally, run `npx wrangler dev --port 8787` and open `http://localhost:8787`.
+To try it locally, run `npx wrangler dev --port 8787` and open `http://localhost:8787`. For online play, open it in two windows; the game uses the local Worker on that port.
 
 ## Deploy to a plain web host (kolom.themicly.com)
 
@@ -125,13 +127,14 @@ Upload everything inside `dist/`, including the hidden `.htaccess`, to the site'
 │   ├── share.js               # Result image
 │   ├── challenge.js           # Challenge links
 │   ├── live.js                # Live player count (connects to the Worker's /live)
+│   ├── online.js              # Online play with a friend (rooms on the Worker's /room)
 │   ├── input.js               # Pointer input
 │   └── main.js                # Game loop and boot
 ├── assets/                    # Icons and og-image.png (link preview)
 ├── tools/og-image.html        # Redraws og-image.png with the game's code
 ├── manifest.webmanifest       # Install name, colours and icons
 ├── sw.js                      # Service worker for offline play
-├── worker/src/index.js        # Cloudflare Worker: serves the game, fills in the site address, live count
+├── worker/src/index.js        # Cloudflare Worker: serves the game, fills in the site address, live count, online rooms
 ├── wrangler.toml, .assetsignore  # Cloudflare deploy config and the files it must not serve
 ├── tools/build-site.js        # Ready-to-upload dist/ for plain web hosts
 ├── robots.txt, sitemap.xml    # For search engines
@@ -140,6 +143,7 @@ Upload everything inside `dist/`, including the hidden `.htaccess`, to the site'
 ├── LICENSE                    # MIT
 ├── CONTRIBUTING.md            # How to add a pen, test and send a change
 ├── docs/ROADMAP.md            # Gaps and the plan for what to build next
+├── docs/ONLINE.md             # Online play: plan, approach, protocol, tests
 ├── AGENTS.md                  # Instructions for AI coding agents
 ├── CLAUDE.md                  # Points Claude Code to AGENTS.md
 └── README.md

@@ -82,6 +82,7 @@
   <div class="hudmid"><div id="turn"></div><div id="tiffin" hidden aria-live="polite"></div></div>
   <div class="pcard p2" id="card1"><div class="who"></div><div class="pen"></div><div class="dots"></div></div>
 </div>
+<div id="netHud" hidden role="status"></div>
 <div id="sirShadow" aria-hidden="true"><svg viewBox="0 0 100 260" preserveAspectRatio="xMinYMax meet"><path d="M50 8c12 0 20 9 20 21s-8 22-20 22-20-10-20-22S38 8 50 8zM26 58h48c8 0 13 6 14 14l6 70c1 7-4 12-10 12h-4l-2 98H64l-6-86h-16l-6 86H22l-2-98h-4c-6 0-11-5-10-12l6-70c1-8 6-14 14-14zM92 150l30 100h-6L86 152z"/></svg></div>
 <div id="hint" hidden></div>
 <div id="bubble" hidden aria-live="polite"></div>
@@ -129,6 +130,13 @@
         <div class="seg tabs" id="segMode" role="group" aria-label="কার সাথে খেলবে">
           <button data-v="cpu" id="modeCpu">🧑‍🎓 রাশেদের সাথে</button>
           <button data-v="2p">👥 দুই বন্ধু মিলে</button>
+          <button data-v="online">🌐 অনলাইনে</button>
+        </div>
+        <div class="netbox" id="netBox" hidden role="status">
+          <p id="netText"></p>
+          <div class="netlink" id="netLink" hidden><input id="netUrl" readonly aria-label="রুমের লিংক"><button class="ghost" id="bNetShare">📤 লিংক পাঠাও</button></div>
+          <p class="netnote" id="netNote"></p>
+          <button class="linkbtn" id="bNetCancel" hidden>রুম ছেড়ে দাও</button>
         </div>
         <div class="vs" id="vs">
           <div class="side p1">
@@ -277,6 +285,7 @@
 <script src="js/share.js"></script>
 <script src="js/challenge.js"></script>
 <script src="js/live.js"></script>
+<script src="js/online.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
