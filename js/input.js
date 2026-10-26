@@ -17,7 +17,7 @@ function onDown(e){
   ensureAudio();ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   try{e.target.setPointerCapture(e.pointerId);}catch(_){}
   if(ptrs.size===2){aim=null;orbit=null;G.aimVis=null;const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);return;}
-  if(G.state==='aim'&&!isCPU(G.turn)){
+  if(G.state==='aim'&&mine(G.turn)&&online.ready()){
     const pt=tablePoint(e),p=pens[G.turn];
     const touch=e.pointerType==='touch',tol=G.view==='2d'?Math.max(.6,(touch?34:26)/T2.s):touch?.85:.6;
     if(pt){const ap=axisPoint(p,pt.x,pt.z);if(ap.d<tol){aim={s:ap.s,cx:ap.px,cz:ap.pz,sx:e.clientX,sy:e.clientY,power:0,dx:0,dz:0};return;}}
@@ -33,6 +33,7 @@ function onMove(e){
     aim.power=clamp(Math.min(l/3.5,Math.hypot(e.clientX-aim.sx,e.clientY-aim.sy)/PULL_PX),0,1);if(l>1e-3){aim.dx=px/l;aim.dz=pz/l;}
     if(aim.power>.04){const sup=G.armed===G.turn;G.aimVis={cx:aim.cx,cz:aim.cz,ang:Math.atan2(aim.dz,aim.dx),power:aim.power,px:pt.x,pz:pt.z,sup};setHint(`${sup?'⚡ ':''}শক্তি ${toBn(Math.round(aim.power*(sup?SUPER.speed:1)*100))}% — ছেড়ে দিলেই টোকা`);}
     else G.aimVis=null;
+    online.aim(G.aimVis);
   } else if(orbit){
     cam.yaw=orbit.yaw-(e.clientX-orbit.x)*.006;cam.user=true;
     cam.pitch=clamp(orbit.pitch+(e.clientY-orbit.y)*.005,.18,1.45);
@@ -43,7 +44,7 @@ function onUp(e){
   if(aim){
     G.aimVis=null;
     if(aim.power>.04&&G.state==='aim')doShot(G.turn,aim.s,aim.dx,aim.dz,aim.power);
-    else setHint('আরেকটু পেছনে টেনে ছাড়ো');
+    else{setHint('আরেকটু পেছনে টেনে ছাড়ো');online.aim(null);}
     aim=null;
   }
   orbit=null;

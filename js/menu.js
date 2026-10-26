@@ -18,8 +18,16 @@ const SIDES=[['p1','c1'],['p2','c2']];
 function refocus(sel){const el=$(sel);if(el&&!el.disabled)el.focus({preventScroll:true});}
 function buildSide(i){
   const [key,ck]=SIDES[i],n=i+1,show=$('#show'+n),dots=$('#grid'+n),sw=$('#sw'+n);
-  const lock=G.matchLive,rivalSide=G.mode==='cpu'&&i===1; // pens are fixed once a match starts
+  const lock=G.matchLive,rivalSide=G.mode!=='2p'&&i===1; // pens are fixed once a match starts
   show.closest('.side').classList.toggle('rival',rivalSide);dots.innerHTML='';sw.innerHTML='';
+  if(rivalSide&&G.mode==='online'){
+    // the friend's side: their pen once they have joined (sent with their hello), names as text only
+    const f=lock?pens[1-G.seat].def:G.peer?penDef(G.peer.pen,G.peer.col):null;
+    show.innerHTML=f?`<canvas class="big" aria-hidden="true"></canvas><div class="pn">${f.name}</div><div class="pcol"></div>`
+      :`<div class="avatar" aria-hidden="true">🌐</div><div class="pn">বন্ধু আসবে লিংকে</div><div class="pcol">বন্ধু যোগ দিলে এখানে তার কলম দেখা যাবে</div>`;
+    if(f){penThumb(show.querySelector('canvas'),f);show.querySelector('.pcol').textContent=`${f.colorBn} · ${poss(who(1-G.seat))} কলম`;}
+    return;
+  }
   if(rivalSide){
     // the computer's pen is picked at random when the match starts (cpuPen); during a match, show it
     const p=lock&&pens[1]?pens[1].def:G.challenge?challengePen():null;
@@ -106,13 +114,17 @@ function saveNames(){try{localStorage.setItem(NAME_KEY,JSON.stringify({p:G.names
 // Labels that carry the rival's name or depend on the mode.
 function pickLabels(){
   const cpu=G.mode==='cpu',r=rival();
-  $('#lab1').textContent=sameAsChallenger()?'তুমি':'';$('#lab2').textContent=cpu?'CPU':''; // tell two same names apart
+  $('#lab1').textContent=sameAsChallenger()?'তুমি':'';$('#lab2').textContent=cpu?'CPU':G.mode==='online'?'অনলাইন':''; // tell two same names apart
   $('#modeCpu').textContent=`🧑‍🎓 ${poss(r)} সাথে`;
   $('#diffLabel').textContent=G.challenge?`চ্যালেঞ্জে ${r} এই লেভেলেই খেলবে · বদলাতে চ্যালেঞ্জ বাদ দাও`:`${r} কতটা পাকা?`;$('#segDiff').setAttribute('aria-label',`${r} কতটা পাকা`);
-  $('#challenge').textContent=G.challenge?`${r} তোমাকে চ্যালেঞ্জ পাঠিয়েছে! টিফিন শেষের আগেই জবাব দাও।`:cpu?`${r} তোমাকে চ্যালেঞ্জ করেছে! টিফিন শেষ হওয়ার আগেই জবাব দাও।`:'দুই বন্ধু, এক টেবিল। স্যার আসার আগেই ফয়সালা।';
+  $('#challenge').textContent=G.challenge?`${r} তোমাকে চ্যালেঞ্জ পাঠিয়েছে! টিফিন শেষের আগেই জবাব দাও।`:cpu?`${r} তোমাকে চ্যালেঞ্জ করেছে! টিফিন শেষ হওয়ার আগেই জবাব দাও।`:G.mode==='online'?'বন্ধু যেখানেই থাকুক, টেবিল একটাই। স্যার আসার আগেই ফয়সালা।':'দুই বন্ধু, এক টেবিল। স্যার আসার আগেই ফয়সালা।';
 }
 function syncNameInputs(){
   const cpu=G.mode==='cpu',n1=$('#name1'),n2=$('#name2');
+  if(G.mode==='online'){
+    n1.value=G.names[0];n1.placeholder='তুমি';n1.setAttribute('aria-label','তোমার নাম');
+    n2.value=G.peer?G.peer.name:'';n2.readOnly=true;n2.placeholder='বন্ধু';n2.setAttribute('aria-label','বন্ধুর নাম');return; // the friend names themselves
+  }
   n1.value=G.names[0];n1.placeholder=cpu?'তুমি':'প্লেয়ার ১';n1.setAttribute('aria-label',cpu?'তোমার নাম':'প্লেয়ার ১-এর নাম');
   n2.value=cpu?(G.challenge?G.challenge.from:G.rival):G.names[1];n2.readOnly=!!G.challenge;n2.placeholder=cpu?CPU:'প্লেয়ার ২';n2.setAttribute('aria-label',cpu?'কম্পিউটারের নাম':'প্লেয়ার ২-এর নাম');
 }
@@ -133,7 +145,10 @@ function refreshMenu(){
   syncNameInputs();pickLabels();buildSide(0);buildSide(1);
   document.querySelectorAll('#segMode button').forEach(b=>b.disabled=G.matchLive);$('#lockNote').hidden=!G.matchLive;
   $('#bResume').hidden=!G.matchLive;
-  $('#bStart').textContent=G.matchLive?'▶ নতুন খেলা':G.challenge?'▶ চ্যালেঞ্জ নাও':'▶ খেলা শুরু করো';
+  const net=G.mode==='online',bs=$('#bStart');bs.hidden=net&&G.matchLive;bs.disabled=false; // an online match ends only by leaving it
+  bs.textContent=G.matchLive?'▶ নতুন খেলা':G.challenge?'▶ চ্যালেঞ্জ নাও':'▶ খেলা শুরু করো';
+  $('#bEndMatch').textContent=net?'ম্যাচ ছেড়ে দাও (বন্ধু জিতে যাবে)':'ম্যাচ ছেড়ে নতুন করে সাজাও';
+  online.ui();
   syncChallengeBanner();document.querySelectorAll('#segDiff button').forEach(b=>b.disabled=!!G.challenge);
   saveSetup();fitHome();
 }
@@ -165,16 +180,19 @@ function openSheet(tab){
   $('#sheet').hidden=false;$('.sheetbody').scrollTop=0;$('#sheet .close').focus();
 }
 function closeSheet(){$('#sheet').hidden=true;if(sheetFrom)sheetFrom.focus({preventScroll:true});}
-function openMenu(){G.prevState=G.state;if(sir.phase==='warn'){sir.phase='calm';sir.left=SIR_WARN+12;placeSir(-16,false,0);} // a fresh warning after the pause
+function openMenu(){
+  if(G.mode==='online'&&G.matchLive){$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;return;} // the match goes on meanwhile
+  G.prevState=G.state;if(sir.phase==='warn'){sir.phase='calm';sir.left=SIR_WARN+12;placeSir(-16,false,0);} // a fresh warning after the pause
   G.state='menu';G.cpuAnim=null;G.aimVis=null;hideBubble();tutor.hide();$('#menu').hidden=false;refreshMenu();drawTableBg();sirSays.start();$('#menu').scrollTop=0;}
 function wireMenu(){
   const seg=(id,key,after)=>{$(id).onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;G[key]=b.dataset.v;if(after)after();refreshMenu();};};
-  seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;}); // two players can't answer a challenge
+  seg('#segMode','mode',()=>{if(G.mode!=='cpu')G.challenge=null;if(G.mode!=='online')online.leave();}); // two players can't answer a challenge
   seg('#segDiff','diff');seg('#segView','view');
   $('#segSir').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.sirOn=b.dataset.v==='on';refreshMenu();};
   $('#segTiffin').onclick=e=>{const b=e.target.closest('button');if(!b)return;G.tiffin=+b.dataset.v;refreshMenu();}; // from the next match
   if(!has3D){const b=document.querySelector('#segView [data-v="3d"]');b.disabled=true;b.textContent='🏫 3D চলবে না';b.title='এই ডিভাইসে 3D চালু করা যায়নি';}
-  buildCredits();loadSetup();readChallenge();wireNames();
+  buildCredits();loadSetup();readChallenge();online.readInvite();online.wire();wireNames();
+  addEventListener('pagehide',online.leave); // closing the tab tells an online friend at once
   $('#sirSays').onclick=()=>sirSays.next();loadStars();
   $('#bDropCh').onclick=dropChallenge;$('#bChallenge').onclick=sendChallenge;
   $('#chName').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sendChallenge();}};
@@ -182,18 +200,18 @@ function wireMenu(){
   $('#segSheet').onclick=e=>{const b=e.target.closest('button');if(b)openSheet(b.dataset.v);};
   document.querySelectorAll('#sheet [data-close]').forEach(b=>b.onclick=closeSheet);
   $('#sheet').onkeydown=e=>{if(e.key==='Escape'){e.stopPropagation();closeSheet();}};
-  $('#bEndMatch').onclick=()=>{G.matchLive=false;G.pending=null;G.prevState='menu';live.update();refreshMenu();};
+  $('#bEndMatch').onclick=()=>{if(G.mode==='online'){online.leave();refreshMenu();return;}G.matchLive=false;G.pending=null;G.prevState='menu';live.update();refreshMenu();};
   $('#bShare').onclick=shareFacebook;
   $('#bSave').onclick=()=>{saveShot();shareNote('ছবিটা ডাউনলোড হয়েছে।');};
-  $('#bStart').onclick=()=>{ensureAudio();$('#menu').hidden=true;setupMatch();};
+  $('#bStart').onclick=()=>{ensureAudio();if(G.mode==='online'){online.startPressed();refreshMenu();return;}$('#menu').hidden=true;setupMatch();};
   $('#bResume').onclick=()=>{
     $('#menu').hidden=true;setView(G.view);
-    if(!G.matchLive)return;
+    if(!G.matchLive||G.mode==='online')return;
     if(['moving','roundover','sirend'].includes(G.prevState))G.state=G.prevState;else startTurn();
     const p=G.pending;if(p)setTimeout(()=>{if(G.pending===p&&$('#menu').hidden){G.pending=null;p.fn();}},700); // the pause between rounds, cut short by the menu
   };
-  $('#bRematch').onclick=()=>{$('#endScreen').hidden=true;setupMatch();};
-  $('#bChange').onclick=()=>{$('#endScreen').hidden=true;if(G.challenge){G.challenge=null;refreshBoard();}openMenu();}; // home ends a challenge; আবার খেলো replays it
+  $('#bRematch').onclick=()=>{if(G.mode==='online'){online.rematch();return;}$('#endScreen').hidden=true;setupMatch();};
+  $('#bChange').onclick=()=>{$('#endScreen').hidden=true;if(G.mode==='online')online.leave();if(G.challenge){G.challenge=null;refreshBoard();}openMenu();}; // home ends a challenge; আবার খেলো replays it
   $('#bMenu').onclick=openMenu;
   $('#bSuper').onclick=toggleSuper;
   $('#bView').onclick=()=>setView(G.view==='3d'?'2d':'3d');

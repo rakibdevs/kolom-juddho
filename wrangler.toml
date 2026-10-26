@@ -10,7 +10,7 @@ directory = "."
 binding = "ASSETS"
 # Only these run the Worker (the live count, and the pages whose __SITE_URL__ it fills in); every other file
 # is served straight from the assets, which doesn't count against the Worker's request quota.
-run_worker_first = ["/live", "/", "/index.html", "/sw.js", "/robots.txt", "/sitemap.xml"]
+run_worker_first = ["/live", "/room/*", "/", "/index.html", "/sw.js", "/robots.txt", "/sitemap.xml"]
 
 # Gives the Worker this deploy's id and date: sw.js uses the id as its cache version.
 [version_metadata]
@@ -20,10 +20,19 @@ binding = "CF_VERSION_METADATA"
 name = "LOBBY"
 class_name = "Lobby"
 
+# One per online match, named by its room code.
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
 # SQLite-backed Durable Objects run on the Workers free plan. The lobby stores nothing.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Lobby"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Room"]
 
 [vars]
 # The game's main address: used for canonical links, link previews, the sitemap and challenge links.

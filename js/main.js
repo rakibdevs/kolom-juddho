@@ -25,7 +25,7 @@ function sync3D(now){
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(.05,(now-last)/1000);last=now;
-  if($('#menu').hidden&&$('#endScreen').hidden&&!document.hidden)sirTick(dt,now); // the tiffin clock pauses on menus
+  if(G.mode==='online'||$('#menu').hidden&&$('#endScreen').hidden&&!document.hidden)sirTick(dt,now); // the tiffin clock pauses on menus, except online
   if(G.state==='cpu'&&G.cpuAnim){
     const a=G.cpuAnim,k=(now-a.t0)/750;
     G.aimVis={cx:a.cx,cz:a.cz,ang:a.plan.ang,power:a.plan.power*Math.min(1,k)};
@@ -35,7 +35,7 @@ function frame(now){
     acc+=dt;const h=1/480;let n=0;
     while(acc>=h&&n<500){physStep(pens,h,hitSound);acc-=h;n++;}
     pens.forEach((p,i)=>{if(p.out&&!p.falling)startFall(i);});
-    if(atRest(pens)&&pens.every(p=>!p.falling||p.falling.done)){G.restT+=dt;if(G.restT>.45)endTurn();}else G.restT=0;
+    if(atRest(pens)&&pens.every(p=>!p.falling||p.falling.done)){G.restT+=dt;if(G.restT>.45&&online.canEnd())endTurn();}else G.restT=0;
   }
   pens.forEach((p,i)=>{
     const f=p.falling;if(!f||f.done)return;

@@ -12,8 +12,8 @@ const tutor=(()=>{
       v=v||new THREE.Vector3();v.set(x,TOP+.1,z).project(camera);
       return {x:(v.x+1)/2*innerWidth,y:(1-v.y)/2*innerHeight};
     }
-    const {s,cx,cy,portrait}=T2;
-    return portrait?{x:cx+z*s,y:cy-x*s}:{x:cx+x*s,y:cy+z*s};
+    const {s,cx,cy,portrait,f}=T2;
+    return portrait?{x:cx+z*s*f,y:cy-x*s*f}:{x:cx+x*s,y:cy+z*s};
   }
   function show(){if(seen||G.state!=='aim'||isCPU(G.turn))return;on=true;$('#tutor').hidden=false;place();}
   function hide(){on=false;$('#tutor').hidden=true;}

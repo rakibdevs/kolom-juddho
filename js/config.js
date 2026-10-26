@@ -111,13 +111,15 @@ const TEACHER_QUOTES=[
   'কলম রাখো, আমার দিকে তাকাও।','পুরো ক্লাস শাস্তি পাবে।','তোমাদের ব্যাচের মতো ব্যাচ আমি দেখিনি।','চুপ! একদম চুপ!',
   'বেতটা কোথায়? কেউ বেতটা আনো তো।','আগে হাত তোলো, তারপর কথা বলো।','বোর্ডে এসো, অঙ্কটা করে দেখাও।',
 ];
-// Live player count: the WebSocket address of the kolom-juddho Worker (worker/src/index.js). It works from every
-// address the game is served from, as long as that origin is in ALLOWED_ORIGINS in wrangler.toml. Empty = off.
-const LIVE_URL='wss://kolom-juddho.rakib1708.workers.dev/live';
+// The kolom-juddho Worker (worker/src/index.js): the live player count (LIVE_URL; empty = off) and online rooms.
+// It works from every address the game is served from, as long as that origin is in ALLOWED_ORIGINS in
+// wrangler.toml. Under `wrangler dev` (port 8787) the local Worker is used.
+const WORKER_URL=location.port==='8787'?`ws://${location.host}`:'wss://kolom-juddho.rakib1708.workers.dev';
+const LIVE_URL=`${WORKER_URL}/live`;
 const FONT_UI='"Noto Sans Bengali", "Noto Sans", sans-serif', FONT_DISPLAY='"Noto Serif Bengali", "Noto Serif", Georgia, serif';
 // Today's date as it would be chalked on the board, e.g. ২৪.১০.২০২৬ and শনিবার.
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}
 const weekdayBn=()=>['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][new Date().getDay()];
 
-const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,stats:null,sirOn:true,tiffin:2,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
+const G={mode:'cpu',diff:'medium',view:'3d',names:['',''],rival:'',superGot:[false,false],challenge:null,stats:null,sirOn:true,tiffin:2,seat:0,peer:null,net:null,rngState:0,turnNo:0,saidAt:-1,p1:'econo',p2:'pinpoint',c1:'blue',c2:'red',score:[0,0],supers:[0,0],armed:-1,turn:0,starter:0,state:'menu',restT:0,matchLive:false,cpuAnim:null,aimVis:null};
 let pens=[],meshes=[],rings=[],muted=false,has3D=true;

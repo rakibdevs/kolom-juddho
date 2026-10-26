@@ -14,16 +14,16 @@ function layout2D(W=innerWidth,H=innerHeight,shot=false){
   // phones held sideways have the turn and tiffin pills beside each other at the top; narrow phones have them under the cards
   const short=H<500&&W>H,topRes=shot?16:short?62:W<=420?114:88,botRes=shot?16:short?54:70,H2=H-topRes-botRes,portrait=H2>W*1.05;
   const s=portrait?Math.min(W/11,H2/17):Math.min(W/17.5,H2/11);
-  T2={s,cx:W/2,cy:topRes+H2/2,portrait,dpr};
+  T2={s,cx:W/2,cy:topRes+H2/2,portrait,dpr,f:portrait&&!shot&&G.mode==='online'&&G.seat===1?-1:1}; // f: an online friend in seat 1 sees the table from their own end
 }
 function setWorld(g){
-  const {s,cx,cy,portrait,dpr}=T2;
-  if(portrait)g.setTransform(0,-s*dpr,s*dpr,0,cx*dpr,cy*dpr);
+  const {s,cx,cy,portrait,dpr,f}=T2;
+  if(portrait)g.setTransform(0,-s*f*dpr,s*f*dpr,0,cx*dpr,cy*dpr);
   else g.setTransform(s*dpr,0,0,s*dpr,cx*dpr,cy*dpr);
 }
 function screenToWorld(sx,sy){
-  const {s,cx,cy,portrait}=T2;
-  return portrait?{x:-(sy-cy)/s,z:(sx-cx)/s}:{x:(sx-cx)/s,z:(sy-cy)/s};
+  const {s,cx,cy,portrait,f}=T2;
+  return portrait?{x:-(sy-cy)/(s*f),z:(sx-cx)/(s*f)}:{x:(sx-cx)/s,z:(sy-cy)/s};
 }
 // Draws a pen lying along +x with the tip at -L/2 and the posted cap at +L/2, in world units.
 // The home screen, the share card and the 2D view all use it.

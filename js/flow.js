@@ -6,7 +6,9 @@ const isCPU=i=>G.mode==='cpu'&&i===1;
 // Names typed on the home screen are used; empty ones fall back to তুমি / রাশেদ or প্লেয়ার ১ / ২.
 // If a challenge comes from someone with the player's own name (say, opening your own link), the player is তুমি.
 const sameAsChallenger=()=>!!(G.challenge&&G.names[0]&&G.names[0].toLowerCase()===G.challenge.from.toLowerCase());
-function who(i){return G.mode==='cpu'?(i===0?(sameAsChallenger()?'তুমি':G.names[0]||'তুমি'):`${rival()} (CPU)`):(G.names[i]||(i===0?'প্লেয়ার ১':'প্লেয়ার ২'));}
+function who(i){
+  if(G.mode==='online')return i===G.seat?G.names[0]||'তুমি':(G.peer&&G.peer.name)||'বন্ধু';
+  return G.mode==='cpu'?(i===0?(sameAsChallenger()?'তুমি':G.names[0]||'তুমি'):`${rival()} (CPU)`):(G.names[i]||(i===0?'প্লেয়ার ১':'প্লেয়ার ২'));}
 function setView(v){
   if(v==='3d'&&(!has3D||G.glLost))v='2d';
   G.view=v;$('#c').style.display=v==='3d'?'block':'none';c2.style.display=v==='2d'?'block':'none';
@@ -31,7 +33,7 @@ function cpuPen(){
 }
 function setupMatch(){
   refreshBoard();
-  placePens([penDef(G.p1,G.c1),G.mode==='cpu'?cpuPen():penDef(G.p2,G.c2)]);
+  placePens(G.mode==='online'?G.net.pens:[penDef(G.p1,G.c1),G.mode==='cpu'?cpuPen():penDef(G.p2,G.c2)]);
   G.score=[0,0];G.starter=0;G.matchLive=true;G.pending=null;G.armed=-1;G.supers=[0,0];G.superGot=[false,false];
   G.stats={shots:[0,0],knocks:0,supers:0,sir:0}; // shown on the result page
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
@@ -40,9 +42,10 @@ function setupMatch(){
   bell(false);live.update();setTimeout(()=>say('start'),2300);
 }
 function newRound(){
-  const z0=(Math.random()-.5)*1.6;
+  const rnd=G.mode==='online'?netRand:Math.random; // online, both screens lay out the same table
+  const z0=(rnd()-.5)*1.6;
   pens.forEach((p,i)=>{
-    Object.assign(p,{x:i?3.2:-3.2,z:z0+(Math.random()-.5)*1.2,a:Math.PI/2+(Math.random()-.5)*.5,vx:0,vz:0,w:0,out:false,falling:null});
+    Object.assign(p,{x:i?3.2:-3.2,z:z0+(rnd()-.5)*1.2,a:Math.PI/2+(rnd()-.5)*.5,vx:0,vz:0,w:0,out:false,falling:null});
     if(meshes[i])meshes[i].inner.rotation.set(0,0,0);
   });
   G.turn=G.starter;startTurn();
@@ -56,31 +59,34 @@ function startTurn(){
       const plan=planShot(1),p=pens[1];
       G.cpuAnim={plan,t0:performance.now(),cx:p.x+Math.cos(p.a)*plan.s,cz:p.z+Math.sin(p.a)*plan.s};
     },380);
+  } else if(!mine(G.turn)){
+    G.state='remote';setHint(`${who(G.turn)} মারছে…`); // the friend's turn, on their screen
   } else {
     G.state='aim';setHint(aimHint());tutor.show();
   }
-  updateSuper();
+  updateSuper();online.turnStarted();
 }
-const aimHint=()=>G.armed===G.turn?'⚡ সুপার টোকা চালু — এবারের টোকা অনেক জোরে যাবে':G.mode==='cpu'?'তোমার কলম চেপে পেছনে টেনে ছাড়ো':`${who(G.turn)}: নিজের কলম চেপে পেছনে টেনে ছাড়ো`;
+const aimHint=()=>G.armed===G.turn?'⚡ সুপার টোকা চালু — এবারের টোকা অনেক জোরে যাবে':G.mode!=='2p'?'তোমার কলম চেপে পেছনে টেনে ছাড়ো':`${who(G.turn)}: নিজের কলম চেপে পেছনে টেনে ছাড়ো`;
 // The ⚡ button shows on a human player's aiming turn; tapping it arms (or disarms) their next flick.
 function updateSuper(){
-  const b=$('#bSuper'),t=G.turn,n=G.supers[t],show=G.matchLive&&G.state==='aim'&&!isCPU(t);
+  const b=$('#bSuper'),t=G.turn,n=G.supers[t],show=G.matchLive&&G.state==='aim'&&mine(t);
   b.hidden=!show;if(!show)return;
   b.disabled=n<=0;b.setAttribute('aria-pressed',G.armed===t);b.classList.toggle('p2',t===1);
   b.querySelector('b').textContent=toBn(n);b.title=n>0?`সুপার টোকা: আর ${toBn(n)} বার`:G.superGot[t]?'সুপার টোকা শেষ':'একটা রাউন্ড জিতলে সুপার টোকা পাবে';
 }
 function toggleSuper(){
-  const t=G.turn;if(G.state!=='aim'||isCPU(t)||G.supers[t]<=0)return;
+  const t=G.turn;if(G.state!=='aim'||!mine(t)||G.supers[t]<=0)return;
   G.armed=G.armed===t?-1:t;setHint(aimHint());updateSuper();
 }
 function doShot(i,s,dx,dz,power){
   const sup=G.armed===i&&G.supers[i]>0; // only the armed human player's flick is boosted
+  online.shot(i,s,dx,dz,power,sup);
   if(sup){
     const p=pens[i];G.supers[i]--;G.armed=-1;G.stats.supers++;
     p.boost={m:p.m,I:p.I,g:p.grip,keep:SUPER.keep,grip:SUPER.grip,hit:false};p.m*=SUPER.mass;p.I*=SUPER.mass;power*=SUPER.speed;
   }
   ensureAudio();applyShot(pens[i],s,dx,dz,power);buzz(12);G.stats.shots[i]++;
-  if(!isCPU(i))tutor.done();
+  if(mine(i))tutor.done();
   G.state='moving';G.restT=0;acc=0;G.aimVis=null;
   snap(.55+power*.35,2600,.05,1500);
   if(sup){snap(.9,1600,.14,700);toast('⚡ সুপার টোকা!','');say('super');}
@@ -113,22 +119,28 @@ function endTurn(){
 }
 // Runs fn after a pause between rounds. If the home screen is open by then, it waits there (G.pending) and
 // ▶ ফিরে চলো runs it; a new match drops it.
+// Online the match never waits for one player's home screen.
 function later(ms,fn){
   const k=G.pending={fn};
-  setTimeout(()=>{if(G.pending===k&&$('#menu').hidden){G.pending=null;fn();}},ms);
+  setTimeout(()=>{if(G.pending===k&&($('#menu').hidden||G.mode==='online')){G.pending=null;fn();}},ms);
 }
-// w is the winner, or -1 for a draw (Sir stopped the match with the score level). bySir: Sir ended it.
-function matchOver(w,bySir){
+// w is the winner, or -1 for a draw (Sir stopped the match with the score level). why: 'sir' when Sir ended
+// it, 'left' when the online friend left.
+function matchOver(w,why){
+  const bySir=why==='sir',net=G.mode==='online';
   G.state='matchover';G.pending=null;placeSir(-16,false,0);$('#tiffin').hidden=true;$('#sirShadow').style.setProperty('--k',0);G.matchLive=false;G.aimVis=null;G.cpuAnim=null;hideBubble();
   bell(true);live.update();
   const cpuWon=G.mode==='cpu'&&w===1,ch=G.challenge,draw=w<0;
-  $('#endTitle').textContent=draw?'ড্র! স্যার এসে পড়েছেন':ch?(cpuWon?`${poss(rival())} চ্যালেঞ্জ টিকে গেল!`:'চ্যালেঞ্জ জিতেছ!'):cpuWon?`${rival()} জিতে গেল!`:`${who(w)} চ্যাম্পিয়ন!`;
+  $('#endTitle').textContent=draw?'ড্র! স্যার এসে পড়েছেন':net?(w===G.seat?'তুমি জিতেছ! 🏆':`${who(w)} জিতে গেল!`):ch?(cpuWon?`${poss(rival())} চ্যালেঞ্জ টিকে গেল!`:'চ্যালেঞ্জ জিতেছ!'):cpuWon?`${rival()} জিতে গেল!`:`${who(w)} চ্যাম্পিয়ন!`;
   $('#endText').textContent=draw?`টিফিন শেষ, স্কোর সমান থাকতেই স্যার ক্লাসে ঢুকে পড়লেন। ${ch?'চ্যালেঞ্জটা আবার নাও!':'আরেক টিফিনে ফয়সালা হবে।'}`
+    :why==='left'?`${who(1-w)} খেলা ছেড়ে চলে গেছে, তাই জয় তোমার।`
     :bySir?`টিফিন শেষে স্যার এসে খেলা থামিয়ে দিলেন। স্কোর তখন ${toBn(G.score[0])}–${toBn(G.score[1])}, তাই জয় ${G.mode==='cpu'?(w?poss(rival()):'তোমার'):poss(who(w))}!`
     :ch?(cpuWon?`${rival()} এবার জিতে গেল। আবার চেষ্টা করো, নয়তো পাল্টা চ্যালেঞ্জ পাঠাও।`:`${rival()}কে হারিয়ে দিয়েছ! এবার পাল্টা চ্যালেঞ্জ পাঠাও।`)
+    :net?(w===G.seat?`${who(1-w)}কে হারিয়ে দিয়েছ! আবার খেলবে?`:`${who(w)} এবার জিতল। আবার খেলে শোধ নাও!`)
     :cpuWon?`${rival()} হাসছে। আবার চেষ্টা করো — কলমের মাথার দিকে মারলে ঘুরে গিয়ে বেশি জোরে লাগে।`:'এই যে, স্যার আসছেন! কলম পকেটে ঢোকাও।';
   $('#chBox').hidden=G.mode!=='cpu';$('#chName').value=G.names[0];$('#bChallenge').querySelector('span').textContent=ch?'পাল্টা চ্যালেঞ্জ পাঠাও':'বন্ধুকে চ্যালেঞ্জ পাঠাও';
   buildResult(w);prepareShare(w);
+  if(net)online.over();else{const b=$('#bRematch');b.disabled=false;b.textContent='▶ আবার খেলো';}
   $('#endScreen').hidden=false;drawTableBg($('#endbg'));$('#endScreen').scrollTop=0;
 }
 
@@ -152,29 +164,31 @@ function buildResult(w){
 }
 
 /* ================= স্যার আসছেন! ================= */
+// Online, the settings of the player who opened the room count (G.net).
+const sirOn=()=>G.mode==='online'?!!(G.net&&G.net.sir):G.sirOn;
 // A tiffin clock (G.tiffin minutes, set on the home screen) runs down while a match is on screen. Near the end
 // Sir's footsteps get louder and he walks to the door. When he arrives the match stops where it is: whoever is
 // ahead wins, and a level score is a draw. Off when G.sirOn is false.
 const sir={left:0,phase:'calm',step:0,z:-16};
 const SIR_WARN=8,TIFFINS=[1,2,3,5];
-function sirReset(){Object.assign(sir,{left:G.tiffin*60,phase:'calm',step:0,z:-16});placeSir(-16,false,0);sirClock();}
+function sirReset(){Object.assign(sir,{left:(G.mode==='online'?G.net.tiffin:G.tiffin)*60,phase:'calm',step:0,z:-16});placeSir(-16,false,0);sirClock();}
 function sirClock(){
   const k=sir.phase==='warn'?1-sir.left/SIR_WARN:sir.phase==='here'?1:0;
-  $('#sirShadow').style.setProperty('--k',G.sirOn&&G.matchLive?k.toFixed(3):0);
-  const el=$('#tiffin');el.hidden=!(G.sirOn&&G.matchLive);if(el.hidden)return;
+  $('#sirShadow').style.setProperty('--k',sirOn()&&G.matchLive?k.toFixed(3):0);
+  const el=$('#tiffin');el.hidden=!(sirOn()&&G.matchLive);if(el.hidden)return;
   if(sir.phase==='warn'){el.className='warn';el.textContent=`🚶 স্যার আসছেন! ${toBn(Math.ceil(sir.left))}`;}
   else if(sir.phase==='here'){el.className='here';el.textContent='🤫 স্যার ক্লাসে!';}
   else{const s=Math.max(0,Math.ceil(sir.left-SIR_WARN)),m=Math.floor(s/60);el.className='';el.textContent=`⏰ টিফিন ${toBn(m)}:${toBn(String(s%60).padStart(2,'0'))}`;}
 }
 function sirTick(dt,now){
-  if(!G.sirOn&&!$('#tiffin').hidden){placeSir(-16,false,0);sir.phase='calm';sirClock();} // switched off mid-match: tidy away
-  if(!G.sirOn||!G.matchLive||sir.phase==='here')return;
-  sir.left-=dt;
+  if(!sirOn()&&!$('#tiffin').hidden){placeSir(-16,false,0);sir.phase='calm';sirClock();} // switched off mid-match: tidy away
+  if(!sirOn()||!G.matchLive||sir.phase==='here')return;
+  sir.left=Math.max(online.ownsClock()?-1:0,sir.left-dt); // online, the room's opener says when he is in
   if(sir.phase==='calm'&&sir.left<=SIR_WARN){sir.phase='warn';sir.step=0;say('sir');toast('🚶 পায়ের শব্দ!','স্যার আসছেন, তাড়াতাড়ি শেষ করো');}
   if(sir.phase==='warn'){
     const k=1-sir.left/SIR_WARN;sir.z=-16+21.5*k;placeSir(sir.z,true,now);
     sir.step-=dt;if(sir.step<=0){sir.step=.55-.15*k;footstep(.12+.5*k);if(k>.5)buzz(15);}
-    if(sir.left<=0)sirArrives();
+    if(sir.left<=0&&online.ownsClock())sirArrives();
   }
   sirClock();
 }
@@ -185,7 +199,7 @@ function sirArrives(){
   G.state='sirend';G.cpuAnim=null;G.aimVis=null;G.armed=-1;aim=null;tutor.hide();hideBubble();pens.forEach(clearBoost);updateSuper();
   const [a,b]=G.score,w=a===b?-1:a>b?0:1;
   toast('🚶 স্যার এসে গেছেন!',`খেলা শেষ! স্কোর ${toBn(a)}–${toBn(b)}${w<0?', ড্র':''}`);setHint('');sirClock();
-  later(2600,()=>matchOver(w,true));
+  online.sirCame();later(2600,()=>matchOver(w,'sir'));
 }
 
 /* ================= HUD ================= */
@@ -195,7 +209,7 @@ function updateHUD(){
     c.querySelector('.dots').innerHTML=Array.from({length:TARGET},(_,k)=>`<i class="${k<G.score[i]?'on':''}"></i>`).join('')+(isCPU(i)?'':`<span class="spc" title="সুপার টোকা বাকি">⚡${toBn(G.supers[i])}</span>`);
     c.classList.toggle('active',G.turn===i);
   });
-  const t=G.turn,label=G.mode==='cpu'?(t===0?'তোমার পালা':`${poss(rival())} পালা`):`${poss(who(t))} পালা`;
+  const t=G.turn,label=G.mode!=='2p'&&mine(t)?'তোমার পালা':G.mode==='cpu'?`${poss(rival())} পালা`:`${poss(who(t))} পালা`;
   const tn=$('#turn');tn.innerHTML=`<span class="sw" style="background:var(--p${t+1})"></span>`;tn.append(label); // names are player input: text only
 }
 function setHint(s){const h=$('#hint');h.textContent=s;h.style.visibility=s?'visible':'hidden';}

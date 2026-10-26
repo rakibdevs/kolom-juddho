@@ -83,6 +83,19 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 #bSuper:disabled{opacity:.45;cursor:not-allowed}
 @keyframes superPulse{50%{transform:scale(1.06)}}
 .spc{margin-left:6px;font-size:var(--fs-2xs);font-weight:700;color:var(--gold);line-height:12px;align-self:center}
+/* online play: the room box on the home screen and a connection notice during a match */
+.netbox{display:flex;flex-direction:column;gap:8px;background:var(--page);border:2px dashed var(--line);border-radius:var(--r-md);padding:10px 12px;font-size:var(--fs-md)}
+.netbox[hidden],.netlink[hidden],.netbox .linkbtn[hidden]{display:none}
+.netbox p{margin:0}
+.netlink{display:flex;gap:8px}
+.netlink input{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;font:inherit;font-size:var(--fs-sm);background:var(--card);color:var(--ink)}
+.netlink .ghost{white-space:nowrap;padding:8px 12px}
+.netnote{font-size:var(--fs-sm);color:var(--ink-soft)}
+.netnote:empty{display:none}
+.netbox .linkbtn{align-self:flex-start}
+#netHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 120px);z-index:7;background:#2b2f3a;color:#fff;border-radius:999px;padding:6px 14px;font-weight:700;font-size:var(--fs-sm);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
+#netHud[hidden]{display:none}
+#bRematch:disabled{opacity:.6;cursor:not-allowed}
 /* Sir's shadow falling across the class from the door as he comes, in both views (k: 0 far, 1 at the door) */
 #sirShadow{position:fixed;left:0;bottom:0;height:92vh;width:40vh;z-index:4;pointer-events:none;opacity:calc(var(--k,0)*.42);transform:translateX(calc((var(--k,0) - 1) * 100%)) skewX(-8deg);transform-origin:bottom left;filter:blur(7px);transition:opacity .3s}
 #sirShadow svg{width:100%;height:100%;fill:#000}

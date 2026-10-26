@@ -27,11 +27,11 @@ function fitDist(c,yaw,pitch,box){
   fits(hi);return hi; // leaves c at the fitted position
 }
 // Starting view that fits the table between the HUD and the hint. Portrait screens look along
-// the table's long side from player 1's end, so the table fills the screen and your pen is nearest.
+// the table's long side from your end (an online friend in seat 1 has the far end), so your pen is nearest.
 // On narrow phones that distance can be above the ceiling (camPos would pull the camera in and crop the
 // table), so the camera comes lower until it fits.
 function camHome(){
-  const W=innerWidth,H=innerHeight,portrait=H>W*1.1,yaw=portrait?-Math.PI/2:.12;
+  const W=innerWidth,H=innerHeight,portrait=H>W*1.1,yaw=portrait?(G.mode==='online'&&G.seat===1?1:-1)*Math.PI/2:.12;
   const c=camera.clone();c.aspect=W/H;c.updateProjectionMatrix();
   const box={x:1-2*(portrait?20:14)/W,top:1-2*(portrait?116:H<500?60:96)/H,bottom:-1+2*(H<500?52:78)/H};
   let pitch=portrait?1.0:.82,dist=fitDist(c,yaw,pitch,box);
