@@ -42,7 +42,7 @@ function setupMatch(){
   $('#hud').hidden=false;$('#hint').hidden=false;$('#tools').hidden=false;
   resetCam();setView(G.view);newRound();sirReset();
   if(G.mode==='cpu')setTimeout(()=>toast(`${rival()} আনল ${pens[1].def.name}`,`${pens[1].def.colorBn} রঙের`),350);
-  bell(false);live.update();setTimeout(()=>say('start'),2300);
+  bell(false);live.update(true);setTimeout(()=>say('start'),2300);
 }
 function newRound(){
   const rnd=G.mode==='online'?netRand:Math.random; // online, both screens lay out the same table

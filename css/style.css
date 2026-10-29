@@ -165,7 +165,7 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .sirsays q{font-size:clamp(19px,2vw,25px);font-weight:600;line-height:1.45;quotes:"“" "”"}
 .sirsays q.in{animation:chalkIn .5s ease-out}
 @keyframes chalkIn{from{opacity:0;transform:translateY(4px)}}
-/* GitHub star button in the top bar, beside ⓘ; shows the star count once there is one */
+/* GitHub button in the top bar, beside ⓘ; shows the star count once there is one */
 .toplinks .star{display:inline-flex;align-items:center;gap:7px;padding:0 14px;min-height:40px;border-radius:999px;background:rgba(20,12,6,.55);border:1px solid rgba(255,255,255,.16);color:#f6f0dc;text-decoration:none;font-weight:600;font-size:var(--fs-md);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .toplinks .star:hover{background:rgba(20,12,6,.75);border-color:var(--chalk-y)}
 .toplinks .star:focus-visible{outline:3px solid var(--chalk-y);outline-offset:2px}
@@ -183,7 +183,8 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .homeboard{width:100%;max-width:1280px;min-height:calc(100dvh - 28px);gap:14px;justify-content:flex-start;padding:20px 34px 30px;
   border:16px solid #6e4322;border-image:linear-gradient(135deg,#94612f,#5e3618 35%,#83522a 65%,#4f2d13) 1;
   background:radial-gradient(ellipse 70% 55% at 50% 38%,#2d4639,#22372d 60%,#1a2a22);
-  box-shadow:inset 0 0 90px rgba(0,0,0,.5),0 20px 44px rgba(0,0,0,.5)}
+  box-shadow:inset 0 0 90px rgba(0,0,0,.5),0 20px 44px rgba(0,0,0,.5);
+  overflow:clip} /* clips like .hero's hidden, but keeps the sticky ▶ button (.go) stuck to the screen's bottom */
 /* top of the board */
 .cbtop{position:relative;z-index:2;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:12px}
 .brand{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:34px;line-height:1.2;color:var(--chalk);opacity:.92;transform:rotate(-7deg);transform-origin:left;justify-self:start;margin-top:6px}
@@ -193,6 +194,7 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .homeboard .toplinks{justify-self:end;display:flex;gap:14px}
 .homeboard .toplinks button,.homeboard .toplinks .star{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:0;padding:0;border:none;border-radius:0;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:var(--chalk);font-family:var(--font-ui);font-size:var(--fs-2xs);font-weight:600;text-decoration:none;cursor:pointer}
 .homeboard .toplinks svg{width:44px;height:44px;padding:9px;border:2px solid rgba(244,242,234,.85);border-radius:50%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.homeboard .toplinks .ghmark{fill:currentColor;stroke:none} /* the GitHub mark is a filled shape, unlike the line icons */
 .homeboard .toplinks button:hover,.homeboard .toplinks .star:hover{background:none;color:var(--chalk-y)}
 .homeboard .toplinks :focus-visible{outline:3px solid var(--chalk-y);outline-offset:3px;border-radius:8px}
 .snd .off,.snd.muted .on{display:none}.snd.muted .off{display:inline}
@@ -214,6 +216,9 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .chalkline{display:block;width:min(460px,62%);height:22px;margin:-10px auto 2px;fill:none;stroke:var(--chalk);stroke-width:3;stroke-linecap:round;opacity:.7}
 .titleblock .en{margin:0;font-size:clamp(20px,2.2vw,30px);font-weight:600;opacity:.95}
 .titleblock .live{margin:10px auto 0}
+/* all matches ever played, quieter than the live count above it */
+.titleblock .plays{margin:6px auto 0;font-family:var(--font-ui);font-size:var(--fs-xs);font-weight:600;color:var(--chalk);opacity:.75}
+.titleblock .plays[hidden]{display:none}
 .titleblock .challenge:empty{display:none}
 /* who to play: three paper cards */
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -407,6 +412,26 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .credits b{color:var(--ink)}
 .credits a{color:inherit}
 .credits .tech{font-size:var(--fs-sm)}
+/* অনুভূতি: the feedback form */
+.fbnote{margin:0 0 12px;font-size:var(--fs-md);line-height:1.6;color:var(--ink-soft)}
+#fbForm{display:flex;flex-direction:column;gap:14px}
+.fbrate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.fbrate .optl,.fbfield .optl{font-size:var(--fs-md);color:var(--ink)}
+#segRate{flex-wrap:nowrap}
+#segRate button{font-size:24px;line-height:1;min-width:48px;min-height:44px;padding:6px 8px}
+.fbratetext{font-size:var(--fs-sm);font-weight:700;color:var(--ink-soft);line-height:1.45}
+.fbfield{display:flex;flex-direction:column;gap:6px}
+.fbfield textarea,.fbfield input{font:inherit;font-size:var(--fs-base);color:var(--ink);background:var(--page);border:2px solid var(--line);border-radius:var(--r-btn);padding:10px 12px;line-height:1.6;min-height:44px}
+.fbfield textarea{resize:vertical;min-height:120px}
+.fbfield textarea:focus-visible,.fbfield input:focus-visible{outline:none;border-color:var(--line-strong)}
+.fbcount{align-self:flex-end;margin-top:-2px;font-size:var(--fs-2xs);color:var(--ink-soft)}
+.fbhp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#bFbSend{align-self:flex-start;min-width:min(240px,100%)}
+#bFbSend:disabled{opacity:.7;cursor:wait}
+.fbstatus{margin:0;font-size:var(--fs-md);font-weight:700;color:var(--btn);line-height:1.6}
+.fbstatus.ok{color:var(--ink)}
+.fbstatus:empty{display:none}
+.fbprivacy{margin:16px 0 0;font-size:var(--fs-sm);color:var(--ink-soft);line-height:1.6}
 .ghrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:12px 0 8px}
 .credits .gh{display:inline-flex;align-items:center;gap:9px;background:var(--ink);color:var(--card);text-decoration:none;font-weight:700;font-size:var(--fs-base);border-radius:999px;padding:10px 18px;min-height:44px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .credits .gh:hover{filter:brightness(1.12)}
@@ -511,8 +536,12 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .go .ghost{padding:12px;font-size:var(--fs-md)}
   .sheet{padding:0;place-items:end stretch}
   .sheetcard{width:100%;max-height:88vh;border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom:none;padding-bottom:env(safe-area-inset-bottom,0px)}
-  .sheethead .seg button{padding:8px 6px;font-size:var(--fs-sm)}
+  .sheethead .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:var(--r-lg)} /* four tabs as a 2 × 2 block */
+  .sheethead .seg button{padding:8px 6px;font-size:var(--fs-sm);border-radius:14px}
   .sheetbody{padding:14px 14px 18px}
+  #segRate{width:100%}
+  #segRate button{min-width:0;padding:6px 4px}
+  #bFbSend{align-self:stretch}
   .chits{grid-template-columns:1fr 1fr;gap:16px 12px}
   .chit{font-size:var(--fs-md);line-height:24px;background-image:repeating-linear-gradient(transparent 0 23px,#cfdff0 23px 24px);padding:18px 10px 10px 22px}
   .steps{grid-template-columns:1fr}
@@ -542,6 +571,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
 /* the turn pill moves under the score cards when they would touch */
 @media (max-width:420px){
+  .homeboard .toplinks button[data-sheet="credits"]{display:none} /* five links don't fit; তথ্য stays a tab in the sheet */
   .hudmid{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);margin:0;flex-direction:row} /* just under the score cards, however tall they are */
   #turn{margin:0}
   #tiffin{font-size:var(--fs-xs);padding:5px 10px}
@@ -595,30 +625,40 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   #heroPens{width:96px;height:84px;margin:0 -8px 0 0}
   .chalkline{margin-top:-6px}
   .titleblock .en{font-size:var(--fs-lg)}
+  .homeboard .sirsays{padding-top:12px}
+  .homeboard .sirsays q{font-size:var(--fs-lg)}
+  .sethead{flex-wrap:wrap;gap:6px 10px} /* a long mode label drops below the title instead of being cut off */
+  .back{width:42px;height:42px;font-size:20px}
+  .tape{font-size:var(--fs-xs);padding:4px 10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;line-height:1.45}
+  .sethead h2{font-size:24px;white-space:nowrap}
+  .notebook{padding:14px 26px 12px}
+  .ghostpen{flex-direction:row;gap:10px;min-height:52px;border-radius:28px 10px 10px 28px;padding:6px 14px}
+  .ghostpen b{font-size:26px}
+  .notebook .carousel canvas.big{height:52px}
+  .notebook .side{gap:6px}
+}
+/* Portrait phones: one column (mode cards as rows, a small বনাম between the two sides). Phones held sideways
+   keep the wide layout: three mode cards in a row and two columns on setup. */
+@media (max-width:700px){
   .modes{grid-template-columns:1fr;gap:12px;margin-top:8px}
   .mode{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto auto;column-gap:14px;align-items:center;text-align:left;padding:10px 14px}
   .mode .art{grid-row:1/3;width:92px;height:60px;margin:0}
   .mode b{align-self:end;font-size:var(--fs-xl)}
   .mode small{align-self:start}
   .mode .tag{top:-10px;right:8px}
-  .homeboard .sirsays{padding-top:12px}
-  .homeboard .sirsays q{font-size:var(--fs-lg)}
-  .sethead{gap:10px}
-  .back{width:42px;height:42px;font-size:20px}
-  .tape{font-size:var(--fs-xs);padding:4px 10px;max-width:48%;overflow:hidden;text-overflow:ellipsis}
-  .sethead h2{font-size:24px;white-space:nowrap}
-  .notebook{padding:14px 26px 12px}
-  .notebook .vs{grid-template-columns:minmax(0,1fr);gap:12px;background:none}
-  .notebook .vsbadge{justify-self:center;width:70px;height:70px}
-  .ghostpen{flex-direction:row;gap:10px;min-height:52px;border-radius:28px 10px 10px 28px;padding:6px 14px}
-  .ghostpen b{font-size:26px}
-  .notebook .carousel canvas.big{height:52px}
-  .notebook .side{gap:6px}
-  .notebook .vsbadge::before{-webkit-mask:radial-gradient(circle,transparent 0 25px,#000 26px 34px,transparent 35px);mask:radial-gradient(circle,transparent 0 25px,#000 26px 34px,transparent 35px)}
-  .notebook .vsbadge span{width:50px;height:50px;font-size:var(--fs-md)}
+  .notebook .vs{grid-template-columns:minmax(0,1fr);gap:8px;background:none}
+  .notebook .vsbadge{justify-self:center;width:56px;height:56px}
+  .notebook .vsbadge::before{-webkit-mask:radial-gradient(circle,transparent 0 20px,#000 21px 27px,transparent 28px);mask:radial-gradient(circle,transparent 0 20px,#000 21px 27px,transparent 28px)}
+  .notebook .vsbadge span{width:40px;height:40px;font-size:var(--fs-xs)}
   .optbar{flex-direction:column;align-items:stretch;gap:8px}
   .optbar .opt{justify-content:space-between;flex-wrap:wrap}
   .optbar .optl{margin-right:auto}
   .optbar .opt+.opt{border-left:none;padding-left:0;border-top:1px dashed #d8ccab;padding-top:8px}
+}
+@media (max-height:500px) and (orientation:landscape){
+  .notebook .vs{gap:14px}
+  .notebook .vsbadge{width:60px;height:60px}
+  .notebook .vsbadge::before{-webkit-mask:radial-gradient(circle,transparent 0 21px,#000 22px 29px,transparent 30px);mask:radial-gradient(circle,transparent 0 21px,#000 22px 29px,transparent 30px)}
+  .notebook .vsbadge span{width:42px;height:42px;font-size:var(--fs-xs)}
 }
 @media (prefers-reduced-motion:reduce){.popcard{animation:none}#tiffin.warn,.fanshade,.sirsays q.in{animation:none}#toast,#bubble{transition:none}#bSuper[aria-pressed="true"]{animation:none}.sheetcard{animation:none}}

@@ -111,11 +111,12 @@ const TEACHER_QUOTES=[
   'কলম রাখো, আমার দিকে তাকাও।','পুরো ক্লাস শাস্তি পাবে।','তোমাদের ব্যাচের মতো ব্যাচ আমি দেখিনি।','চুপ! একদম চুপ!',
   'বেতটা কোথায়? কেউ বেতটা আনো তো।','আগে হাত তোলো, তারপর কথা বলো।','বোর্ডে এসো, অঙ্কটা করে দেখাও।',
 ];
-// The kolom-juddho Worker (worker/src/index.js): the live player count (LIVE_URL; empty = off) and online rooms.
-// It works from every address the game is served from, as long as that origin is in ALLOWED_ORIGINS in
-// wrangler.toml. Under `wrangler dev` (port 8787) the local Worker is used.
+// The kolom-juddho Worker (worker/src/index.js): the live player count (LIVE_URL; empty = off), online rooms
+// and the অনুভূতি form (FEEDBACK_URL, plain https). It works from every address the game is served from, as
+// long as that origin is in ALLOWED_ORIGINS in wrangler.toml. Under `wrangler dev` (port 8787) the local Worker is used.
 const WORKER_URL=location.port==='8787'?`ws://${location.host}`:'wss://kolom-juddho.rakib1708.workers.dev';
 const LIVE_URL=`${WORKER_URL}/live`;
+const FEEDBACK_URL=`${WORKER_URL.replace(/^ws/,'http')}/feedback`;
 const FONT_UI='"Noto Sans Bengali", "Noto Sans", sans-serif', FONT_DISPLAY='"Noto Serif Bengali", "Noto Serif", Georgia, serif';
 // Today's date as it would be chalked on the board, e.g. ২৪.১০.২০২৬ and শনিবার.
 function todayBn(){const d=new Date(),z=n=>String(n).padStart(2,'0');return toBn(`${z(d.getDate())}.${z(d.getMonth()+1)}.${d.getFullYear()}`);}

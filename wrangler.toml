@@ -10,7 +10,7 @@ directory = "."
 binding = "ASSETS"
 # Only these run the Worker (the live count, and the pages whose __SITE_URL__ it fills in); every other file
 # is served straight from the assets, which doesn't count against the Worker's request quota.
-run_worker_first = ["/live", "/room/*", "/", "/index.html", "/sw.js", "/robots.txt", "/sitemap.xml"]
+run_worker_first = ["/live", "/room/*", "/feedback", "/stats", "/", "/index.html", "/sw.js", "/robots.txt", "/sitemap.xml"]
 
 # Gives the Worker this deploy's id and date: sw.js uses the id as its cache version.
 [version_metadata]
@@ -25,7 +25,8 @@ class_name = "Lobby"
 name = "ROOM"
 class_name = "Room"
 
-# SQLite-backed Durable Objects run on the Workers free plan. The lobby stores nothing.
+# SQLite-backed Durable Objects run on the Workers free plan. The lobby keeps only the match counts per day
+# (GET /stats); rooms store nothing.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Lobby"]
@@ -33,6 +34,22 @@ new_sqlite_classes = ["Lobby"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Room"]
+
+# The অনুভূতি form's messages (POST /feedback): a D1 database, made once with
+#   npx wrangler d1 create kolom-feedback
+# Read them in the Cloudflare dashboard (Storage & Databases > D1) or with
+#   npx wrangler d1 execute kolom-feedback --remote --command "SELECT * FROM feedback ORDER BY id DESC LIMIT 50"
+# Until this binding exists the form answers "can't send right now" and nothing is stored.
+# [[d1_databases]]
+# binding = "FEEDBACK"
+# database_name = "kolom-feedback"
+# database_id = ""
+
+# At most 5 feedback messages a minute from one address. Cloudflare counts them; the game stores no addresses.
+[[ratelimits]]
+name = "FEEDBACK_LIMIT"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
 
 [vars]
 # The game's main address: used for canonical links, link previews, the sitemap and challenge links.

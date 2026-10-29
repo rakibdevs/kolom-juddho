@@ -56,7 +56,7 @@ async function init(){
   buildArt();loadNames(); // before the scene, so the board names a renamed Rashed
   if(window.THREE){try{buildScene();v3=new THREE.Vector3();ndc=new THREE.Vector2();}catch(e){has3D=false;}}else has3D=false;
   if(!has3D)G.view='2d';
-  wireMenu();
+  wireMenu();feedback.wire();
   [has3D?renderer.domElement:null,c2].forEach(cv=>{
     if(!cv)return;
     cv.addEventListener('pointerdown',onDown);cv.addEventListener('pointermove',onMove);

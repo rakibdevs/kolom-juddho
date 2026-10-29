@@ -189,13 +189,14 @@ function loadStars(){
     show(j.stargazers_count);try{sessionStorage.setItem('kolom-juddho:stars',j.stargazers_count);}catch(e){}
   }).catch(()=>{});
 }
-// Rules, memories and credits live in one sheet with tabs, opened from the top bar.
+// Rules, memories, credits and the অনুভূতি form live in one sheet with tabs, opened from the top bar.
 let sheetFrom=null;
 function openSheet(tab){
   if($('#sheet').hidden)sheetFrom=document.activeElement;
   syncSeg('#segSheet',tab);
   document.querySelectorAll('#segSheet button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===tab));
   document.querySelectorAll('.sheetbody [data-tab]').forEach(p=>p.hidden=p.dataset.tab!==tab);
+  if(tab==='feedback')feedback.opened();
   $('#sheet').hidden=false;$('.sheetbody').scrollTop=0;$('#sheet .close').focus();
 }
 function closeSheet(){$('#sheet').hidden=true;if(sheetFrom)sheetFrom.focus({preventScroll:true});}
