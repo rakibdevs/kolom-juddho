@@ -39,11 +39,11 @@ new_sqlite_classes = ["Room"]
 #   npx wrangler d1 create kolom-feedback
 # Read them in the Cloudflare dashboard (Storage & Databases > D1) or with
 #   npx wrangler d1 execute kolom-feedback --remote --command "SELECT * FROM feedback ORDER BY id DESC LIMIT 50"
-# Until this binding exists the form answers "can't send right now" and nothing is stored.
-# [[d1_databases]]
-# binding = "FEEDBACK"
-# database_name = "kolom-feedback"
-# database_id = ""
+# Without this binding the form answers "can't send right now" and nothing is stored.
+[[d1_databases]]
+binding = "FEEDBACK"
+database_name = "kolom-feedback"
+database_id = "9f5e8dd6-2179-43ae-938f-e5a1c07379bc"
 
 # At most 5 feedback messages a minute from one address. Cloudflare counts them; the game stores no addresses.
 [[ratelimits]]
