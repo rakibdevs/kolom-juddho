@@ -1,11 +1,12 @@
 // The kolom-juddho Worker: serves the game's static files and the live player count.
 //
 // - /live upgrades to a WebSocket held by one Durable Object ("lobby"), which tells every open game how many
-//   are online and how many are in a match. Nothing is stored and nothing identifies a player: a socket only
+//   are online and how many are in a match. Nothing identifies a player: a socket only
 //   ever says {"playing": true|false}, plus {"start": "cpu"|"2p"|"online"} when it starts a match. Each start
-//   adds one to that day's row in the D1 table `daily_plays` (date, cpu, duet, online), and the lobby keeps the running totals per day in its own SQLite storage (an online
-//   match is counted once, by the player who opened the room) and sends them with every count. GET /stats
-//   returns them with the last 30 days.
+//   adds one to that day's row in the D1 table `daily_plays` (date, cpu, duet, online); an online match is
+//   counted once, by the player who opened the room. The lobby loads the all-time totals per mode from there
+//   when it wakes, keeps them up to date and sends them with every count. GET /stats returns them with the
+//   last 30 days.
 //   It uses the WebSocket Hibernation API, so it sleeps between messages.
 // - /room/<CODE>?seat=0|1 upgrades to a WebSocket held by that room's Durable Object ("Room"), which pairs two
 //   players for an online match and relays their messages to each other. It has no game logic and stores
@@ -23,7 +24,7 @@ const MAX_MSG = 4096;
 const FILL = /^\/(index\.html)?$|^\/(sw\.js|robots\.txt|sitemap\.xml)$/;
 const MAX_FEEDBACK = 1000;
 const MODES = ['cpu', '2p', 'online'];
-const MIN_MATCH_MS = 20000; // a socket's starts closer together than this aren't counted
+const MIN_MATCH_MS = 3000; // a socket's starts closer together than this are one start sent twice, not two
 const PLAY_COLUMN = { cpu: 'cpu', '2p': 'duet', online: 'online' }; // the mode's column in daily_plays
 
 export default {
@@ -119,7 +120,8 @@ function live(req, env) {
   return refuse(req, env) || env.LOBBY.get(env.LOBBY.idFromName('lobby')).fetch(req);
 }
 
-// The match counts as JSON, for anyone: {total, online, days: [{day, total, online}, ...]} (newest first).
+// The match counts as JSON, for anyone: {total, cpu, duet, online, days: [{date, cpu, duet, online}, ...]}
+// (newest first).
 async function stats(req, env) {
   if (req.method !== 'GET') return new Response('Method not allowed', { status: 405 });
   const res = await env.LOBBY.get(env.LOBBY.idFromName('lobby')).fetch('https://lobby/stats');
@@ -135,16 +137,28 @@ export class Lobby {
   constructor(state, env) {
     this.state = state;
     this.env = env;
-    this.sql = state.storage.sql;
-    // matches started per UTC day; `online` is the part of `total` played online
-    this.sql.exec('CREATE TABLE IF NOT EXISTS plays (day TEXT PRIMARY KEY, total INTEGER NOT NULL, online INTEGER NOT NULL)');
-    this.totals = this.sql.exec('SELECT COALESCE(SUM(total), 0) AS total, COALESCE(SUM(online), 0) AS online FROM plays').one();
+    this.totals = null; // {cpu, duet, online}, all time; null when D1 isn't there or couldn't be read
+    state.storage.sql.exec('DROP TABLE IF EXISTS plays'); // the earlier per-day counts, now kept in D1 only
+    state.blockConcurrencyWhile(() => this.loadTotals());
+  }
+
+  async loadTotals() {
+    const db = this.env.FEEDBACK;
+    if (!db) return;
+    try {
+      await ensureCountsTable(db);
+      const t = await db.prepare('SELECT COALESCE(SUM(cpu), 0) AS cpu, COALESCE(SUM(duet), 0) AS duet, COALESCE(SUM(online), 0) AS online FROM daily_plays').first();
+      this.totals = { cpu: t.cpu, duet: t.duet, online: t.online };
+    } catch (e) { console.error('daily_plays totals', e); }
   }
 
   async fetch(req) {
     if (new URL(req.url).pathname === '/stats') {
-      const days = this.sql.exec('SELECT day, total, online FROM plays ORDER BY day DESC LIMIT 30').toArray();
-      return new Response(JSON.stringify({ ...this.totals, days }));
+      const t = this.totals || { cpu: 0, duet: 0, online: 0 };
+      const days = this.env.FEEDBACK
+        ? (await this.env.FEEDBACK.prepare('SELECT date, cpu, duet, online FROM daily_plays ORDER BY date DESC LIMIT 30').all()).results
+        : [];
+      return new Response(JSON.stringify({ total: t.cpu + t.duet + t.online, ...t, days }));
     }
     if (this.state.getWebSockets().length >= MAX_SOCKETS) return new Response('Lobby full', { status: 503 });
     const [client, server] = Object.values(new WebSocketPair());
@@ -165,7 +179,7 @@ export class Lobby {
     // a match starting: counted once per start, and not again from the same socket within MIN_MATCH_MS
     if (playing && !was.playing && MODES.includes(m.start) && Date.now() - last >= MIN_MATCH_MS) {
       last = Date.now();
-      this.count(m.start === 'online');
+      if (this.totals) this.totals[PLAY_COLUMN[m.start]]++;
       rec = this.record(m);
     }
     ws.serializeAttachment({ playing, last });
@@ -173,7 +187,8 @@ export class Lobby {
     if (rec) await rec;
   }
 
-  // Adds this start to today's row in D1; a failed write loses only that one, the totals above still count it.
+  // Adds this start to today's row in D1; a failed write loses only that one (until the lobby next wakes, the
+  // totals in memory still have it).
   record(m) {
     const db = this.env.FEEDBACK;
     if (!db) return null;
@@ -181,12 +196,6 @@ export class Lobby {
     return ensureCountsTable(db).then(() => db.prepare(`INSERT INTO daily_plays (date, ${col}) VALUES (?, 1)
       ON CONFLICT (date) DO UPDATE SET ${col} = ${col} + 1`).bind(new Date().toISOString().slice(0, 10)).run())
       .catch(e => console.error('daily_plays', e));
-  }
-
-  count(online) {
-    const day = new Date().toISOString().slice(0, 10), n = online ? 1 : 0;
-    this.sql.exec('INSERT INTO plays (day, total, online) VALUES (?, 1, ?) ON CONFLICT(day) DO UPDATE SET total = total + 1, online = online + ?', day, n, n);
-    this.totals = { total: this.totals.total + 1, online: this.totals.online + n };
   }
 
   webSocketClose(ws, code) {
@@ -198,12 +207,12 @@ export class Lobby {
     this.broadcast(ws);
   }
 
-  // Sends {online, playing, total, net} to every open socket, leaving out one that is closing. total and net
-  // are all the matches ever started and the online ones among them.
+  // Sends {online, playing} to every open socket, leaving out one that is closing, and with them `plays`: all the
+  // matches ever started, by mode {cpu, duet, net} (net is online matches; `online` is the people here now).
   broadcast(gone) {
     const open = this.state.getWebSockets().filter(w => w !== gone && w.readyState === WebSocket.OPEN);
-    const playing = open.filter(w => (w.deserializeAttachment() || {}).playing).length;
-    const msg = JSON.stringify({ online: open.length, playing, total: this.totals.total, net: this.totals.online });
+    const playing = open.filter(w => (w.deserializeAttachment() || {}).playing).length, t = this.totals;
+    const msg = JSON.stringify({ online: open.length, playing, ...(t && { plays: { cpu: t.cpu, duet: t.duet, net: t.online } }) });
     for (const w of open) {
       try { w.send(msg); } catch (e) { /* the next close event tidies up */ }
     }

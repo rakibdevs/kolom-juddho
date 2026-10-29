@@ -216,9 +216,15 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--p1);outline-o
 .chalkline{display:block;width:min(460px,62%);height:22px;margin:-10px auto 2px;fill:none;stroke:var(--chalk);stroke-width:3;stroke-linecap:round;opacity:.7}
 .titleblock .en{margin:0;font-size:clamp(20px,2.2vw,30px);font-weight:600;opacity:.95}
 .titleblock .live{margin:10px auto 0}
-/* all matches ever played, quieter than the live count above it */
-.titleblock .plays{margin:6px auto 0;font-family:var(--font-ui);font-size:var(--fs-xs);font-weight:600;color:var(--chalk);opacity:.75}
+/* all matches ever played, in all and by mode: chalk numbers split by dashed lines, the total first and brightest */
+.titleblock .plays{display:flex;justify-content:center;margin:12px auto 0;font-family:var(--font-ui);color:var(--chalk)}
 .titleblock .plays[hidden]{display:none}
+.plays>div{display:flex;flex-direction:column;align-items:center;gap:1px;padding:0 14px;border-left:1.5px dashed rgba(244,242,234,.35);opacity:.8}
+.plays>div:first-child{border-left:none}
+.plays b{font-family:var(--font-display);font-size:var(--fs-xl);font-weight:700;line-height:1.1}
+.plays span{font-size:var(--fs-2xs);font-weight:600;white-space:nowrap}
+.plays>.all{opacity:1}
+.plays>.all b{color:var(--chalk-y)}
 .titleblock .challenge:empty{display:none}
 /* who to play: three paper cards */
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -571,6 +577,7 @@ button,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
 /* the turn pill moves under the score cards when they would touch */
 @media (max-width:420px){
+  .plays>div{padding:0 9px}
   .homeboard .toplinks button[data-sheet="credits"]{display:none} /* five links don't fit; তথ্য stays a tab in the sheet */
   .hudmid{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);margin:0;flex-direction:row} /* just under the score cards, however tall they are */
   #turn{margin:0}

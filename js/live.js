@@ -1,5 +1,5 @@
 // Live player count on the home screen's chalkboard: "🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন", and under it how
-// many matches have ever been played ("🎮 মোট খেলা ১২৩৪ বার · অনলাইনে ৫৬ বার"). The game keeps a WebSocket
+// many matches have ever been played, in all and by mode (মোট খেলা, রাশেদের সাথে, দুজনে, অনলাইনে). The game keeps a WebSocket
 // open to the Cloudflare Worker in worker/ and tells it only whether this tab is in a match, and the mode when
 // one starts, which the Worker counts per day. An online match is counted by the player who opened the room only.
 // Off when LIVE_URL is empty; hidden while offline or disconnected, and it retries with a growing delay.
@@ -23,9 +23,9 @@ const live=(()=>{
     ws.send(JSON.stringify(m));
   }
   function show(m){
-    const el=$('#live'),st=$('#plays');el.hidden=!m||m.online<1;
-    st.hidden=!m||!(m.total>0);
-    if(!st.hidden)st.textContent=`🎮 মোট খেলা ${toBn(m.total)} বার${m.net>0?` · অনলাইনে ${toBn(m.net)} বার`:''}`;
+    const el=$('#live'),st=$('#plays'),p=m&&m.plays,n=k=>p&&Number.isInteger(p[k])&&p[k]>0?p[k]:0;
+    const all=n('cpu')+n('duet')+n('net');st.hidden=!all;
+    if(all){$('#plTotal').textContent=toBn(all);$('#plCpu').textContent=toBn(n('cpu'));$('#plDuet').textContent=toBn(n('duet'));$('#plNet').textContent=toBn(n('net'));}
     if(!el.hidden)el.textContent=`🟢 এখন অনলাইন ${toBn(m.online)} জন${m.playing?` · খেলছে ${toBn(m.playing)} জন`:''}`;
   }
   addEventListener('online',connect);
