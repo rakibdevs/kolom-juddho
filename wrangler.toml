@@ -35,8 +35,8 @@ new_sqlite_classes = ["Lobby"]
 tag = "v2"
 new_sqlite_classes = ["Room"]
 
-# The অনুভূতি form's messages (POST /feedback, table `feedback`) and a row for every match started (table
-# `plays`: mode, level, challenge, view, country): a D1 database, made once with
+# The অনুভূতি form's messages (POST /feedback, table `feedback`) and how many matches start each day per
+# category (table `play_counts`: day, mode, level, challenge, count): a D1 database, made once with
 #   npx wrangler d1 create kolom-feedback
 # Read them in the Cloudflare dashboard (Storage & Databases > D1) or with
 #   npx wrangler d1 execute kolom-feedback --remote --command "SELECT * FROM feedback ORDER BY id DESC LIMIT 50"

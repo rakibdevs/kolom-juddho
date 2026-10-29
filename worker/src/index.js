@@ -2,10 +2,11 @@
 //
 // - /live upgrades to a WebSocket held by one Durable Object ("lobby"), which tells every open game how many
 //   are online and how many are in a match. Nothing is stored and nothing identifies a player: a socket only
-//   ever says {"playing": true|false}, plus {"start": "cpu"|"2p"|"online", "level", "ch", "view"} when it
-//   starts a match. Each start is a row in the D1 table `plays` (mode, level, challenge, view, country), and
-//   the lobby keeps the running totals per day in its own SQLite storage (an online match is counted once, by
-//   the player who opened the room) and sends them with every count. GET /stats returns them with 30 days.
+//   ever says {"playing": true|false}, plus {"start": "cpu"|"2p"|"online", "level", "ch"} when it starts a
+//   match. Each start adds one to its category's count for the day in the D1 table `play_counts` (day, mode,
+//   level, challenge), and the lobby keeps the running totals per day in its own SQLite storage (an online
+//   match is counted once, by the player who opened the room) and sends them with every count. GET /stats
+//   returns them with the last 30 days.
 //   It uses the WebSocket Hibernation API, so it sleeps between messages.
 // - /room/<CODE>?seat=0|1 upgrades to a WebSocket held by that room's Durable Object ("Room"), which pairs two
 //   players for an online match and relays their messages to each other. It has no game logic and stores
@@ -69,7 +70,7 @@ function cleanText(v, max, oneLine) {
   return (oneLine ? s.replace(/\s+/g, ' ') : s).trim().slice(0, max);
 }
 
-let feedbackTable = null, playsTable = null; // each made once per Worker instance
+let feedbackTable = null, countsTable = null; // each made once per Worker instance
 function ensureFeedbackTable(db) {
   feedbackTable = feedbackTable || db.prepare(`CREATE TABLE IF NOT EXISTS feedback (
     id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, rating INTEGER, text TEXT NOT NULL,
@@ -77,11 +78,12 @@ function ensureFeedbackTable(db) {
   return feedbackTable;
 }
 
-function ensurePlaysTable(db) {
-  playsTable = playsTable || db.prepare(`CREATE TABLE IF NOT EXISTS plays (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, mode TEXT NOT NULL, level TEXT, challenge INTEGER NOT NULL,
-    view TEXT, country TEXT)`).run().catch(e => { playsTable = null; throw e; });
-  return playsTable;
+// Matches started per UTC day and category. level is '' outside matches against the computer.
+function ensureCountsTable(db) {
+  countsTable = countsTable || db.prepare(`CREATE TABLE IF NOT EXISTS play_counts (
+    day TEXT NOT NULL, mode TEXT NOT NULL, level TEXT NOT NULL, challenge INTEGER NOT NULL, count INTEGER NOT NULL,
+    PRIMARY KEY (day, mode, level, challenge))`).run().catch(e => { countsTable = null; throw e; });
+  return countsTable;
 }
 
 async function feedback(req, env) {
@@ -141,7 +143,6 @@ export class Lobby {
   }
 
   async fetch(req) {
-    const country = (req.cf && req.cf.country) || null; // kept with the socket, for the D1 play records
     if (new URL(req.url).pathname === '/stats') {
       const days = this.sql.exec('SELECT day, total, online FROM plays ORDER BY day DESC LIMIT 30').toArray();
       return new Response(JSON.stringify({ ...this.totals, days }));
@@ -149,7 +150,7 @@ export class Lobby {
     if (this.state.getWebSockets().length >= MAX_SOCKETS) return new Response('Lobby full', { status: 503 });
     const [client, server] = Object.values(new WebSocketPair());
     this.state.acceptWebSocket(server);
-    server.serializeAttachment({ playing: false, last: 0, country });
+    server.serializeAttachment({ playing: false, last: 0 });
     this.broadcast();
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -166,21 +167,23 @@ export class Lobby {
     if (playing && !was.playing && MODES.includes(m.start) && Date.now() - last >= MIN_MATCH_MS) {
       last = Date.now();
       this.count(m.start === 'online');
-      rec = this.record(m, was.country);
+      rec = this.record(m);
     }
-    ws.serializeAttachment({ playing, last, country: was.country || null });
+    ws.serializeAttachment({ playing, last });
     this.broadcast();
     if (rec) await rec;
   }
 
-  // One row in D1 for this match start; a failed write only loses the row, the totals above still count it.
-  record(m, country) {
+  // Adds this start to its category's count for the day in D1; a failed write loses only that one, the totals
+  // above still count it.
+  record(m) {
     const db = this.env.FEEDBACK;
     if (!db) return null;
-    const level = m.start === 'cpu' && LEVELS.includes(m.level) ? m.level : null;
-    return ensurePlaysTable(db).then(() => db.prepare('INSERT INTO plays (at, mode, level, challenge, view, country) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(new Date().toISOString(), m.start, level, m.start === 'cpu' && m.ch === 1 ? 1 : 0, m.view === '3d' || m.view === '2d' ? m.view : null, country || null).run())
-      .catch(e => console.error('plays insert', e));
+    const cpu = m.start === 'cpu', level = cpu && LEVELS.includes(m.level) ? m.level : '';
+    return ensureCountsTable(db).then(() => db.prepare(`INSERT INTO play_counts (day, mode, level, challenge, count) VALUES (?, ?, ?, ?, 1)
+      ON CONFLICT (day, mode, level, challenge) DO UPDATE SET count = count + 1`)
+      .bind(new Date().toISOString().slice(0, 10), m.start, level, cpu && m.ch === 1 ? 1 : 0).run())
+      .catch(e => console.error('play_counts', e));
   }
 
   count(online) {

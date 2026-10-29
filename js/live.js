@@ -1,8 +1,8 @@
 // Live player count on the home screen's chalkboard: "🟢 এখন অনলাইন ১২ জন · খেলছে ৫ জন", and under it how
 // many matches have ever been played ("🎮 মোট খেলা ১২৩৪ বার · অনলাইনে ৫৬ বার"). The game keeps a WebSocket
 // open to the Cloudflare Worker in worker/ and tells it only whether this tab is in a match, and what kind of
-// match when one starts (mode, view, and against the computer the level and whether it is a challenge), which
-// the Worker records. An online match is counted by the player who opened the room only.
+// match when one starts (the mode, and against the computer the level and whether it is a challenge), which
+// the Worker counts per day. An online match is counted by the player who opened the room only.
 // Off when LIVE_URL is empty; hidden while offline or disconnected, and it retries with a growing delay.
 "use strict";
 
@@ -20,7 +20,7 @@ const live=(()=>{
   function update(started){
     if(!ws||ws.readyState!==WebSocket.OPEN)return;
     const m={playing:!!G.matchLive};
-    if(started&&G.matchLive&&(G.mode!=='online'||G.seat===0))Object.assign(m,{start:G.mode,view:G.view},G.mode==='cpu'&&{level:level(),ch:G.challenge?1:0});
+    if(started&&G.matchLive&&(G.mode!=='online'||G.seat===0))Object.assign(m,{start:G.mode},G.mode==='cpu'&&{level:level(),ch:G.challenge?1:0});
     ws.send(JSON.stringify(m));
   }
   function show(m){
