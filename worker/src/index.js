@@ -2,9 +2,8 @@
 //
 // - /live upgrades to a WebSocket held by one Durable Object ("lobby"), which tells every open game how many
 //   are online and how many are in a match. Nothing is stored and nothing identifies a player: a socket only
-//   ever says {"playing": true|false}, plus {"start": "cpu"|"2p"|"online", "level", "ch"} when it starts a
-//   match. Each start adds one to its category's count for the day in the D1 table `play_counts` (day, mode,
-//   level, challenge), and the lobby keeps the running totals per day in its own SQLite storage (an online
+//   ever says {"playing": true|false}, plus {"start": "cpu"|"2p"|"online"} when it starts a match. Each start
+//   adds one to that day's row in the D1 table `daily_plays` (date, cpu, duet, online), and the lobby keeps the running totals per day in its own SQLite storage (an online
 //   match is counted once, by the player who opened the room) and sends them with every count. GET /stats
 //   returns them with the last 30 days.
 //   It uses the WebSocket Hibernation API, so it sleeps between messages.
@@ -25,7 +24,7 @@ const FILL = /^\/(index\.html)?$|^\/(sw\.js|robots\.txt|sitemap\.xml)$/;
 const MAX_FEEDBACK = 1000;
 const MODES = ['cpu', '2p', 'online'];
 const MIN_MATCH_MS = 20000; // a socket's starts closer together than this aren't counted
-const LEVELS = ['easy', 'medium', 'hard'];
+const PLAY_COLUMN = { cpu: 'cpu', '2p': 'duet', online: 'online' }; // the mode's column in daily_plays
 
 export default {
   async fetch(req, env) {
@@ -78,11 +77,11 @@ function ensureFeedbackTable(db) {
   return feedbackTable;
 }
 
-// Matches started per UTC day and category. level is '' outside matches against the computer.
+// Matches started per UTC date: against the computer, two on one phone (duet) and online.
 function ensureCountsTable(db) {
-  countsTable = countsTable || db.prepare(`CREATE TABLE IF NOT EXISTS play_counts (
-    day TEXT NOT NULL, mode TEXT NOT NULL, level TEXT NOT NULL, challenge INTEGER NOT NULL, count INTEGER NOT NULL,
-    PRIMARY KEY (day, mode, level, challenge))`).run().catch(e => { countsTable = null; throw e; });
+  countsTable = countsTable || db.prepare(`CREATE TABLE IF NOT EXISTS daily_plays (
+    date TEXT PRIMARY KEY, cpu INTEGER NOT NULL DEFAULT 0, duet INTEGER NOT NULL DEFAULT 0, online INTEGER NOT NULL DEFAULT 0)`)
+    .run().catch(e => { countsTable = null; throw e; });
   return countsTable;
 }
 
@@ -174,16 +173,14 @@ export class Lobby {
     if (rec) await rec;
   }
 
-  // Adds this start to its category's count for the day in D1; a failed write loses only that one, the totals
-  // above still count it.
+  // Adds this start to today's row in D1; a failed write loses only that one, the totals above still count it.
   record(m) {
     const db = this.env.FEEDBACK;
     if (!db) return null;
-    const cpu = m.start === 'cpu', level = cpu && LEVELS.includes(m.level) ? m.level : '';
-    return ensureCountsTable(db).then(() => db.prepare(`INSERT INTO play_counts (day, mode, level, challenge, count) VALUES (?, ?, ?, ?, 1)
-      ON CONFLICT (day, mode, level, challenge) DO UPDATE SET count = count + 1`)
-      .bind(new Date().toISOString().slice(0, 10), m.start, level, cpu && m.ch === 1 ? 1 : 0).run())
-      .catch(e => console.error('play_counts', e));
+    const col = PLAY_COLUMN[m.start]; // from the fixed map above, never from the message itself
+    return ensureCountsTable(db).then(() => db.prepare(`INSERT INTO daily_plays (date, ${col}) VALUES (?, 1)
+      ON CONFLICT (date) DO UPDATE SET ${col} = ${col} + 1`).bind(new Date().toISOString().slice(0, 10)).run())
+      .catch(e => console.error('daily_plays', e));
   }
 
   count(online) {
