@@ -24,6 +24,7 @@ const live=(()=>{
   }
   function show(m){
     const el=$('#live'),st=$('#plays'),p=m&&m.plays,n=k=>p&&Number.isInteger(p[k])&&p[k]>0?p[k]:0;
+    el.hidden=!m||m.online<1;
     const all=n('cpu')+n('duet')+n('net');st.hidden=!all;
     if(all){$('#plTotal').textContent=toBn(all);$('#plCpu').textContent=toBn(n('cpu'));$('#plDuet').textContent=toBn(n('duet'));$('#plNet').textContent=toBn(n('net'));}
     if(!el.hidden)el.textContent=`🟢 এখন অনলাইন ${toBn(m.online)} জন${m.playing?` · খেলছে ${toBn(m.playing)} জন`:''}`;
